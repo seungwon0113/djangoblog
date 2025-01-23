@@ -1,0 +1,30 @@
+FROM python:3.12-slim
+
+WORKDIR /backend
+
+# 시스템 패키지 설치
+RUN apt-get update && apt-get install -y \
+    libpq-dev \
+    gcc \
+    python3-dev \
+    curl \
+    postgresql-client \
+    && rm -rf /var/lib/apt/lists/*
+
+# Poetry 설치 (pip를 통해 설치)
+RUN pip install poetry
+
+COPY poetry.lock pyproject.toml ./
+
+# Poetry 가상 환경 비활성화 (Docker 내부에서는 불필요)
+RUN poetry config virtualenvs.create false
+
+RUN poetry install --no-root
+
+COPY . .
+
+# 시작 스크립트 추가
+COPY start.sh /start.sh
+RUN chmod +x /start.sh
+
+CMD ["/start.sh"]
