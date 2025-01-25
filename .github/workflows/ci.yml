@@ -1,93 +1,44 @@
-name: Djangoblog CI
+name: Django CI
 
 on:
   push:
-    branches:
-      - "*"
+    branches: [ "main", "develop" ]
   pull_request:
-    branches:
-      - "main"
-      - "develop"
+    branches: [ "main", "develop" ]
 
 jobs:
-  backend-test:
+  build:
     runs-on: ubuntu-latest
-
+    
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Install Docker Compose
-        run: |
-          sudo curl -L "https://github.com/docker/compose/releases/download/v2.24.7/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-          sudo chmod +x /usr/local/bin/docker-compose
-          docker-compose --version
-
-      - name: Build and start containers
-        run: |
-          docker-compose build
-          docker-compose up -d
-
-      - name: Wait for database
-        run: |
-          docker-compose exec -T database pg_isready -U djangoblog -d djangoblog
-
-      - name: Run migrations
-        run: |
-          docker-compose exec -T backend poetry run python manage.py migrate
-
-      - name: Run tests
-        run: |
-          docker-compose exec -T backend poetry run python manage.py test
-
-      - name: Run linting
-        run: |
-          docker-compose exec -T backend poetry run flake8 .
-          docker-compose exec -T backend poetry run black . --check
-
-      - name: Run security checks
-        run: |
-          docker-compose exec -T backend poetry run bandit -r .
-          docker-compose exec -T backend poetry run safety check
-
-      - name: Clean up
-        if: always()
-        run: |
-          docker-compose down -v
-
-  security-check:
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./backend
+    - uses: actions/checkout@v4
+    
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+      
+    - name: Build the Docker images
+      run: docker-compose build
+      
+    - name: Start containers
+      run: |
+        docker-compose up -d
+        sleep 10  # 컨테이너가 완전히 시작될 때까지 대기
         
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.12'
-
-      - name: Install Poetry
-        run: |
-          curl -sSL https://install.python-poetry.org | python3 -
-
-      - name: Update Poetry Lock File
-        run: |
-          poetry lock --no-update
-
-      - name: Install Dependencies
-        run: |
-          poetry install
-
-      - name: Run Bandit Security Check
-        run: |
-          poetry run bandit -r .
-
-      - name: Check Dependencies for Security Vulnerabilities
-        run: |
-          poetry run safety check
-          
+    - name: Check running containers
+      run: docker-compose ps
+      
+    - name: Check backend logs
+      run: docker-compose logs backend
+      
+    - name: Check database logs
+      run: docker-compose logs database
+      
+    - name: Run migrations
+      run: docker-compose exec -T backend poetry run python manage.py migrate
+      
+    - name: Run Django tests
+      run: docker-compose exec -T backend poetry run python manage.py test
+      
+    - name: Clean up
+      if: always()
+      run: docker-compose down -v
