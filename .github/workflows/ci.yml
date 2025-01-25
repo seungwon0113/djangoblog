@@ -53,11 +53,8 @@ jobs:
         DB_HOST: localhost
         DB_PORT: 5432
       run: |
-        # 마이그레이션 실행
         poetry run python manage.py makemigrations
         poetry run python manage.py migrate
-        
-        # 테스트 실행
         poetry run python manage.py test
 
     - name: Run Linting
@@ -99,16 +96,32 @@ jobs:
         DB_HOST: database
         DB_PORT: 5432
       run: |
-        docker-compose build
-        docker-compose up -d
-        sleep 10  # 컨테이너 시작 대기
+        # 먼저 데이터베이스만 시작
+        docker-compose up -d database
+        
+        # 데이터베이스가 준비될 때까지 대기
+        echo "Waiting for database to be ready..."
+        timeout 30s bash -c 'until docker-compose exec -T database pg_isready -U djangoblog -d djangoblog; do sleep 2; done'
+        
+        # 데이터베이스 로그 확인
+        echo "Database logs:"
+        docker-compose logs database
+        
+        # 백엔드 시작
+        docker-compose up -d backend
+        
+        # 백엔드가 준비될 때까지 대기
+        echo "Waiting for backend to be ready..."
+        sleep 10
+        
+        # 백엔드 로그 확인
+        echo "Backend logs:"
+        docker-compose logs backend
         
         # 컨테이너 상태 확인
         docker-compose ps
-        docker-compose logs backend
-        docker-compose logs database
         
-        # 테스트
+        # 테스트 실행
         docker-compose exec -T backend poetry run python manage.py migrate
         docker-compose exec -T backend poetry run python manage.py test
         
