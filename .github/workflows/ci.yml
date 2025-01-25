@@ -1,0 +1,106 @@
+name: Djangoblog CI
+
+on:
+  push:
+    branches:
+      - "*"
+  pull_request:
+    branches:
+      - "main"
+      - "develop"
+
+jobs:
+  backend-test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgresql:
+        image: postgres:14
+        env:
+          POSTGRES_DB: djangoblog
+          POSTGRES_USER: djangoblog
+          POSTGRES_PASSWORD: djangoblog
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+          
+      - name: Install Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+
+      - name: Configure Poetry
+        run: |
+          poetry config virtualenvs.create false
+
+      - name: Install Dependencies
+        run: |
+          poetry install
+
+      - name: Run Migrations
+        env:
+          DJANGO_SECRET_KEY: django-insecure-test-key
+          DB_NAME: djangoblog
+          DB_USER: djangoblog
+          DB_PASSWORD: djangoblog
+          DB_HOST: localhost
+          DB_PORT: 5432
+        run: |
+          poetry run python manage.py migrate
+
+      - name: Run Tests
+        env:
+          DJANGO_SECRET_KEY: django-insecure-test-key
+          DB_NAME: djangoblog
+          DB_USER: djangoblog
+          DB_PASSWORD: djangoblog
+          DB_HOST: localhost
+          DB_PORT: 5432
+        run: |
+          poetry run python manage.py test
+
+      - name: Run Flake8
+        run: |
+          poetry run flake8 .
+
+      - name: Run Black Check
+        run: |
+          poetry run black . --check
+
+  security-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Install Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+
+      - name: Install Dependencies
+        run: |
+          poetry install
+
+      - name: Run Bandit Security Check
+        run: |
+          poetry run bandit -r .
+
+      - name: Check Dependencies for Security Vulnerabilities
+        run: |
+          poetry run safety check
+          
