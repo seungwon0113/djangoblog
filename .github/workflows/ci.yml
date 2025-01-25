@@ -96,30 +96,36 @@ jobs:
         DB_HOST: database
         DB_PORT: 5432
       run: |
-        # 먼저 데이터베이스만 시작
+        # 전체 빌드 먼저 실행
+        docker-compose build
+        
+        # 데이터베이스 시작 및 로그 확인
         docker-compose up -d database
-        
-        # 데이터베이스가 준비될 때까지 대기
-        echo "Waiting for database to be ready..."
-        timeout 30s bash -c 'until docker-compose exec -T database pg_isready -U djangoblog -d djangoblog; do sleep 2; done'
-        
-        # 데이터베이스 로그 확인
+        echo "Database container status:"
+        docker ps -a
         echo "Database logs:"
         docker-compose logs database
         
+        # 데이터베이스 준비 상태 확인 (더 긴 타임아웃)
+        echo "Waiting for database to be ready..."
+        for i in {1..30}; do
+          if docker-compose exec -T database pg_isready -U djangoblog; then
+            echo "Database is ready!"
+            break
+          fi
+          echo "Waiting for database... attempt $i"
+          sleep 2
+        done
+        
         # 백엔드 시작
+        echo "Starting backend..."
         docker-compose up -d backend
         
-        # 백엔드가 준비될 때까지 대기
-        echo "Waiting for backend to be ready..."
-        sleep 10
+        echo "All container status:"
+        docker-compose ps
         
-        # 백엔드 로그 확인
         echo "Backend logs:"
         docker-compose logs backend
-        
-        # 컨테이너 상태 확인
-        docker-compose ps
         
         # 테스트 실행
         docker-compose exec -T backend poetry run python manage.py migrate
