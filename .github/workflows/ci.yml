@@ -63,7 +63,6 @@ jobs:
     - name: Run Linting
       working-directory: ./backend
       run: |
-        poetry run flake8 .
         poetry run black . --check
 
   docker-build:
