@@ -1,18 +1,54 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>게시글 작성</title>
-</head>
-<body>
-    <h1>게시글 작성</h1>
-    <form method="post">
-        {% csrf_token %}
-        <input type="text" name="title" placeholder="제목">
-        <input type="text" name="content" placeholder="내용">
-        <input type="text" name="category" placeholder="카테고리">
-        <input type="text" name="tags" placeholder="태그">
-        <button type="submit">작성</button>
-    </form>
-</body>
-</html>
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-transparent">
+                    <h3 class="mb-0">게시글 작성</h3>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="title" class="form-label">제목</label>
+                            <input type="text" class="form-control" id="title" name="title" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="content" class="form-label">내용</label>
+                            <textarea class="form-control" id="content" name="content" rows="5" required></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="category" class="form-label">카테고리</label>
+                            <select class="form-select" id="category" name="category" required>
+                                <option value="" selected disabled>카테고리를 선택하세요</option>
+                                {% for category in categories %}
+                                <option value="{{ category.name }}">{{ category.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="image" class="form-label">이미지</label>
+                            <input type="file" class="form-control" id="image" name="image" accept="image/*">
+                        </div>
+                        <div class="mb-3">
+                            <label for="tags" class="form-label">태그</label>
+                            <input type="text" class="form-control" id="tags" name="tags" placeholder="쉼표로 구분하여 입력">
+                            <div class="form-text">예: 태그1, 태그2, 태그3</div>
+                        </div>
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-pencil-square"></i> 작성하기
+                            </button>
+                            <a href="{% url 'posts:post_list' %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left"></i> 목록으로
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
