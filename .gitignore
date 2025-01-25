@@ -281,3 +281,5 @@ pyrightconfig.json
 # __init__.py 제외
 */migrations/*.py
 !*/migrations/__init__.py
+
+## __pycache__ 

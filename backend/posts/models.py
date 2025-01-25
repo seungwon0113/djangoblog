@@ -6,6 +6,7 @@ from tags.models import Tag
 
 # Create your models here.
 
+
 class Post(BaseModel):
     title = models.CharField(max_length=255)
     content = models.TextField()
@@ -15,8 +16,8 @@ class Post(BaseModel):
 
     def __str__(self):
         return self.title
-    
+
     class Meta:
-        db_table = 'posts'
-        verbose_name = '게시글'
-        verbose_name_plural = '게시글'
+        db_table = "posts"
+        verbose_name = "게시글"
+        verbose_name_plural = "게시글"
