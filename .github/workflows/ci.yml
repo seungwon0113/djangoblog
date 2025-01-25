@@ -47,6 +47,10 @@ jobs:
         run: |
           poetry config virtualenvs.create false
 
+      - name: Update Poetry Lock File
+        run: |
+          poetry lock --no-update
+
       - name: Install Dependencies
         run: |
           poetry install
@@ -98,6 +102,10 @@ jobs:
       - name: Install Poetry
         run: |
           curl -sSL https://install.python-poetry.org | python3 -
+
+      - name: Update Poetry Lock File
+        run: |
+          poetry lock --no-update
 
       - name: Install Dependencies
         run: |
