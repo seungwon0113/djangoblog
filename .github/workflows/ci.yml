@@ -12,78 +12,44 @@ on:
 jobs:
   backend-test:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./backend
-
-    services:
-      postgresql:
-        image: postgres:14
-        env:
-          POSTGRES_DB: djangoblog
-          POSTGRES_USER: djangoblog
-          POSTGRES_PASSWORD: djangoblog
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.12'
-          
-      - name: Install Poetry
-        run: |
-          curl -sSL https://install.python-poetry.org | python3 -
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-      - name: Configure Poetry
+      - name: Build and start containers
         run: |
-          poetry config virtualenvs.create false
+          docker-compose build
+          docker-compose up -d
 
-      - name: Update Poetry Lock File
+      - name: Wait for database
         run: |
-          poetry lock --no-update
+          docker-compose exec -T database pg_isready -U djangoblog -d djangoblog
 
-      - name: Install Dependencies
+      - name: Run migrations
         run: |
-          poetry install
+          docker-compose exec -T backend poetry run python manage.py migrate
 
-      - name: Run Migrations
-        env:
-          DJANGO_SECRET_KEY: django-insecure-test-key
-          DB_NAME: djangoblog
-          DB_USER: djangoblog
-          DB_PASSWORD: djangoblog
-          DB_HOST: localhost
-          DB_PORT: 5432
+      - name: Run tests
         run: |
-          poetry run python manage.py migrate
+          docker-compose exec -T backend poetry run python manage.py test
 
-      - name: Run Tests
-        env:
-          DJANGO_SECRET_KEY: django-insecure-test-key
-          DB_NAME: djangoblog
-          DB_USER: djangoblog
-          DB_PASSWORD: djangoblog
-          DB_HOST: localhost
-          DB_PORT: 5432
+      - name: Run linting
         run: |
-          poetry run python manage.py test
+          docker-compose exec -T backend poetry run flake8 .
+          docker-compose exec -T backend poetry run black . --check
 
-      - name: Run Flake8
+      - name: Run security checks
         run: |
-          poetry run flake8 .
+          docker-compose exec -T backend poetry run bandit -r .
+          docker-compose exec -T backend poetry run safety check
 
-      - name: Run Black Check
+      - name: Clean up
+        if: always()
         run: |
-          poetry run black . --check
+          docker-compose down -v
 
   security-check:
     runs-on: ubuntu-latest
