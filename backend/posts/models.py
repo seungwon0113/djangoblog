@@ -1,8 +1,9 @@
 from django.db import models
-from core.basemodels import BaseModel
-from users.models import User
+
 from categories.models import Category
+from core.basemodels import BaseModel
 from tags.models import Tag
+from users.models import User
 
 # Create your models here.
 

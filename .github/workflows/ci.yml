@@ -61,6 +61,7 @@ jobs:
       working-directory: ./backend
       run: |
         poetry run black . --check
+        poetry run isort . --check
 
   docker-build:
     runs-on: ubuntu-latest
