@@ -1,9 +1,7 @@
 from django.db import models
 
-from core.basemodels import BaseModel
 
-
-class Contact(BaseModel):
+class Inquiry(models.Model):
     name = models.CharField(max_length=255)
     email = models.EmailField()
     phone = models.CharField(max_length=255)
@@ -11,3 +9,8 @@ class Contact(BaseModel):
 
     def __str__(self):
         return self.name
+
+    class Meta:
+        db_table = "inquiries"
+        verbose_name = "Inquiry"
+        verbose_name_plural = "Inquiries"

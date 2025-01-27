@@ -35,6 +35,7 @@ urlpatterns = (
         path("users/", include("users.urls"), name="users"),
         path("posts/", include("posts.urls", namespace="posts")),
         path("comments/", include("comments.urls", namespace="comments")),
+        path("contacts/", include("contacts.urls", namespace="contacts")),
     ]
     + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
     + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

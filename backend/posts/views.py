@@ -25,10 +25,10 @@ class PostListView(View):
         categories = Category.objects.all()
         search_query = request.GET.get("search", "")
         category = request.GET.get("category", "")  # 카테고리 파라미터 추가
-        
+
         # 기본적으로 최신순 정렬
         posts = Post.objects.all().order_by("-created_at")
-        
+
         # 카테고리로 필터링
         if category:
             posts = posts.filter(category__name__exact=category)  # 정확한 일치 검색
@@ -45,13 +45,13 @@ class PostListView(View):
                 .distinct()
                 .order_by("-created_at")
             )
-            
+
         context = {
             "posts": posts,
             "categories": categories,
             "search_query": search_query,
         }
-        
+
         return render(request, "posts/postlist.html", context)
 
 
