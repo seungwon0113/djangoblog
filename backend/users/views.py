@@ -37,6 +37,7 @@ class UserProfileView(LoginRequiredMixin, View):
                 "users/profile.html",
                 {
                     "user": user,
+                    "user_image": user.user_image,
                     "categories": categories,
                     "category_post_count": category_post_count,
                 },
@@ -80,18 +81,20 @@ class UserSignupView(View):
 class UserUpdateView(View):
     def post(self, request):
         try:
+            # 이미지 파일이 있는 경우에만 처리
+            user_image = request.FILES.get("user_image")
+
             user = UserService.update_user(
                 request.user,
                 username=request.POST.get("username"),
                 email=request.POST.get("email"),
                 phone=request.POST.get("phone"),
+                user_image=user_image if user_image else request.user.user_image,
             )
             return redirect("users:user_profile")
         except Exception as e:
-            # 에러가 발생하면 프로필 페이지로 돌아가서 에러 메시지 표시
-            return render(
-                request, "users/profile.html", {"user": request.user, "error": str(e)}
-            )
+            messages.error(request, str(e))
+            return redirect("users:user_profile")
 
 
 # user_login View

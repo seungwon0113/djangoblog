@@ -14,10 +14,10 @@
                         {{ error }}
                     </div>
                     {% endif %}
-                    <form method="post">
+                    <form method="post" action="{% url 'users:user_login' %}">
                         {% csrf_token %}
-                        {% if next %}
-                        <input type="hidden" name="next" value="{{ next }}">
+                        {% if request.GET.next %}
+                            <input type="hidden" name="next" value="{{ request.GET.next }}">
                         {% endif %}
                         <div class="mb-3">
                             <label for="username" class="form-label">아이디</label>
