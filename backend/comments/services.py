@@ -7,7 +7,7 @@ class CommentService:
     # 게시글 댓글 조회
     @staticmethod
     def get_comments_by_post_id(post_id):
-        return Comment.objects.filter(post_id=post_id).order_by("-created_at")
+        return Comment.objects.filter(post_id=post_id)
 
     # 댓글 생성
     @staticmethod

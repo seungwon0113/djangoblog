@@ -133,16 +133,18 @@ contentTextarea.addEventListener('input', (e) => {
     
     // 백틱 3개를 입력했을 때
     if (content.slice(pos-3, pos) === '```') {
-        // 이전 줄이 비어있거나 문서의 시작인 경우
-        const beforeText = content.slice(0, pos-3);
-        const afterText = content.slice(pos);
-        if (!beforeText || beforeText.endsWith('\n')) {
-            // python 코드 블록 템플릿 추가
-            const template = 'python\n\n```';
-            e.target.value = beforeText + '```' + template + afterText;
-            // 커서를 코드 블록 안으로 이동
-            e.target.selectionStart = pos + 7;
-            e.target.selectionEnd = pos + 7;
+        // 현재 줄의 시작 위치 찾기
+        const lineStart = content.lastIndexOf('\n', pos-4) + 1;
+        // 현재 줄이 비어있는지 확인
+        const currentLine = content.slice(lineStart, pos-3).trim();
+        
+        if (currentLine === '') {
+            // 코드 블록 시작
+            const beforeText = content.slice(0, pos-3);
+            const afterText = content.slice(pos);
+            e.target.value = beforeText + '```\n\n```' + afterText;
+            e.target.selectionStart = pos + 1;
+            e.target.selectionEnd = pos + 1;
             e.preventDefault();
         }
     }
