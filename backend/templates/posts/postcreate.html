@@ -1,18 +1,188 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>게시글 작성</title>
-</head>
-<body>
-    <h1>게시글 작성</h1>
-    <form method="post">
-        {% csrf_token %}
-        <input type="text" name="title" placeholder="제목">
-        <input type="text" name="content" placeholder="내용">
-        <input type="text" name="category" placeholder="카테고리">
-        <input type="text" name="tags" placeholder="태그">
-        <button type="submit">작성</button>
-    </form>
-</body>
-</html>
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
+                    <h3 class="mb-0">게시글 작성</h3>
+                    <div class="form-check form-switch">
+                    </div>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="title" class="form-label">제목</label>
+                            <input type="text" class="form-control" id="title" name="title" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="content" class="form-label">내용</label>
+                            <div class="d-flex gap-2 mb-2">
+                                <button type="button" class="btn btn-sm btn-outline-secondary" id="editButton">편집</button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" id="previewButton">미리보기</button>
+                            </div>
+                            <div class="markdown-editor">
+                                <textarea class="form-control" id="content" name="content" rows="10" required></textarea>
+                                <div id="preview" class="form-control d-none p-3" style="min-height: 250px; overflow-y: auto;"></div>
+                            </div>
+                            <div class="form-text">
+                                마크다운 문법을 지원합니다. 코드 블록은 다음과 같이 작성하세요:<br>
+                                <code>```python</code><br>
+                                코드를 여기에 작성<br>
+                                <code>```</code>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="category" class="form-label">카테고리</label>
+                            <select class="form-select" id="category" name="category" required>
+                                <option value="" selected disabled>카테고리를 선택하세요</option>
+                                {% for category in categories %}
+                                <option value="{{ category.name }}">{{ category.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="image" class="form-label">이미지</label>
+                            <input type="file" class="form-control" id="image" name="image" accept="image/*">
+                        </div>
+                        <div class="mb-3">
+                            <label for="tags" class="form-label">태그</label>
+                            <input type="text" class="form-control" id="tags" name="tags" placeholder="쉼표로 구분하여 입력">
+                            <div class="form-text">예: 태그1, 태그2, 태그3</div>
+                        </div>
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-pencil-square"></i> 작성하기
+                            </button>
+                            <a href="{% url 'posts:post_list' %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left"></i> 목록으로
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* 코드 블록 스타일 */
+.markdown-editor pre {
+    background-color: #1e1e1e !important;  /* VS Code 스타일의 어두운 배경 */
+    border-radius: 6px;
+    padding: 16px;
+    margin: 1em 0;
+    overflow: auto;
+}
+
+.markdown-editor pre code {
+    color: #d4d4d4 !important;  /* 밝은 색상의 텍스트 */
+    background: none !important;
+    border: none;
+    padding: 0 !important;
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-size: 14px;
+    line-height: 1.5;
+    white-space: pre;
+}
+
+/* 인라인 코드 스타일 */
+.markdown-editor code:not(pre code) {
+    background-color: #2d2d2d;
+    color: #d4d4d4;
+    padding: 0.2em 0.4em;
+    border-radius: 4px;
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-size: 90%;
+}
+
+/* 미리보기 영역 스타일 */
+#preview {
+    background-color: white;
+    padding: 20px !important;
+}
+</style>
+
+<!-- marked.js 추가 -->
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script>
+const contentTextarea = document.getElementById('content');
+const preview = document.getElementById('preview');
+const editButton = document.getElementById('editButton');
+const previewButton = document.getElementById('previewButton');
+
+// marked.js 설정
+marked.setOptions({
+    highlight: function(code, lang) {
+        if (lang && hljs.getLanguage(lang)) {
+            return hljs.highlight(code, { language: lang }).value;
+        }
+        return hljs.highlightAuto(code).value;
+    },
+    breaks: true,
+    gfm: true,
+    langPrefix: 'hljs language-'
+});
+
+// 코드 블록 자동 완성
+contentTextarea.addEventListener('input', (e) => {
+    const pos = e.target.selectionStart;
+    const content = e.target.value;
+    
+    // 백틱 3개를 입력했을 때
+    if (content.slice(pos-3, pos) === '```') {
+        // 현재 줄의 시작 위치 찾기
+        const lineStart = content.lastIndexOf('\n', pos-4) + 1;
+        // 현재 줄이 비어있는지 확인
+        const currentLine = content.slice(lineStart, pos-3).trim();
+        
+        if (currentLine === '') {
+            // 코드 블록 시작
+            const beforeText = content.slice(0, pos-3);
+            const afterText = content.slice(pos);
+            e.target.value = beforeText + '```\n\n```' + afterText;
+            e.target.selectionStart = pos + 1;
+            e.target.selectionEnd = pos + 1;
+            e.preventDefault();
+        }
+    }
+    
+    // 미리보기 모드일 때 업데이트
+    if (!preview.classList.contains('d-none')) {
+        updatePreview();
+    }
+});
+
+// 편집 모드
+editButton.addEventListener('click', () => {
+    preview.classList.add('d-none');
+    contentTextarea.classList.remove('d-none');
+    editButton.classList.add('active');
+    previewButton.classList.remove('active');
+});
+
+// 미리보기 모드
+previewButton.addEventListener('click', () => {
+    preview.classList.remove('d-none');
+    contentTextarea.classList.add('d-none');
+    previewButton.classList.add('active');
+    editButton.classList.remove('active');
+    updatePreview();
+});
+
+// 미리보기 업데이트
+function updatePreview() {
+    const markdown = contentTextarea.value;
+    preview.innerHTML = marked.parse(markdown);
+    // 코드 하이라이트 적용
+    preview.querySelectorAll('pre code').forEach((block) => {
+        hljs.highlightElement(block);
+    });
+}
+
+// 초기 상태 설정
+editButton.classList.add('active');
+</script>
+{% endblock %}

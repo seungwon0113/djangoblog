@@ -1,6 +1,7 @@
 from django.db import models
-from core.basemodels import BaseModel
+
 from categories.models import Category
+from core.basemodels import BaseModel
 
 
 class Tag(BaseModel):

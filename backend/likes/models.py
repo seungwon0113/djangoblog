@@ -1,7 +1,8 @@
 from django.db import models
+
 from core.basemodels import BaseModel
-from users.models import User
 from posts.models import Post
+from users.models import User
 
 
 class Like(BaseModel):
