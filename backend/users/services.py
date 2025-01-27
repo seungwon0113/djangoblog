@@ -1,5 +1,6 @@
 from users.models import User
 
+
 class UserService:
     @staticmethod
     def get_user_by_username(username):
@@ -7,8 +8,10 @@ class UserService:
 
     @staticmethod
     def create_user(username, password, email):
-        return User.objects.create_user(username=username, password=password, email=email)
-    
+        return User.objects.create_user(
+            username=username, password=password, email=email
+        )
+
     @staticmethod
     def update_user(user, **kwargs):
         for key, value in kwargs.items():
@@ -19,7 +22,7 @@ class UserService:
     @staticmethod
     def delete_user(user):
         user.delete()
-        
+
     @staticmethod
     def validate_user(user):
         if not user.is_authenticated:

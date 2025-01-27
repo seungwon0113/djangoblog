@@ -53,7 +53,7 @@
                         </ul>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#">About</a>
+                        <a class="nav-link" href="{% url 'contacts:contact_inquiry' %}">Contact</a>
                     </li>
                 </ul>
                 <form class="d-flex" role="search" action="{% url 'posts:post_list' %}" method="get">
@@ -68,6 +68,18 @@
         </div>
     </nav>
 
+    <!-- 메시지 표시 영역 추가 -->
+    {% if messages %}
+    <div class="container mt-3">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
     {% block content %}
     {% endblock %}
 
@@ -75,5 +87,19 @@
         <hr>
         <p class="text-center text-muted">&copy; 2025 Slog</p>
     </footer>
+
+    <!-- 메시지 자동 닫기 스크립트 추가 -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // 3초 후 자동으로 알림 닫기
+        setTimeout(function() {
+            var alerts = document.querySelectorAll('.alert');
+            alerts.forEach(function(alert) {
+                var bsAlert = new bootstrap.Alert(alert);
+                bsAlert.close();
+            });
+        }, 3000);
+    });
+    </script>
 </body>
 </html>

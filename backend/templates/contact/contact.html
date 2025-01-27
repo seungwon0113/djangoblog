@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-transparent py-3">
+                    <h4 class="mb-0">문의하기</h4>
+                </div>
+                <div class="card-body">
+                    {% if success %}
+                    <div class="alert alert-success" role="alert">
+                        문의가 성공적으로 전송되었습니다. 빠른 시일 내에 답변 드리겠습니다.
+                    </div>
+                    {% endif %}
+                    {% if error %}
+                    <div class="alert alert-danger" role="alert">
+                        {{ error }}
+                    </div>
+                    {% endif %}
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="name" class="form-label">이름 <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="name" name="name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="email" class="form-label">이메일 <span class="text-danger">*</span></label>
+                            <input type="email" class="form-control" id="email" name="email" required>
+                            <div class="form-text">답변은 입력하신 이메일로 발송됩니다.</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="phone" class="form-label">전화번호</label>
+                            <input type="tel" class="form-control" id="phone" name="phone" 
+                                   pattern="[0-9]{3}-[0-9]{4}-[0-9]{4}" 
+                                   placeholder="010-1234-5678">
+                            <div class="form-text">선택사항입니다.</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="message" class="form-label">문의내용 <span class="text-danger">*</span></label>
+                            <textarea class="form-control" id="message" name="message" rows="5" required></textarea>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-send"></i> 문의하기
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// 전화번호 자동 하이픈 추가
+document.getElementById('phone').addEventListener('input', function(e) {
+    let value = e.target.value.replace(/[^0-9]/g, '');
+    if (value.length > 3 && value.length <= 7) {
+        value = value.slice(0,3) + '-' + value.slice(3);
+    } else if (value.length > 7) {
+        value = value.slice(0,3) + '-' + value.slice(3,7) + '-' + value.slice(7,11);
+    }
+    e.target.value = value;
+});
+</script>
+{% endblock %}
