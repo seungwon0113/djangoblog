@@ -8,7 +8,9 @@ def get_post_by_id(post_id):
 
 
 # 게시글 생성 로직
-def create_post(title, content, author, category, image=None, tags=None):
+def create_post(
+    title, content, author, category, image=None, tags=None, is_public=True
+):
     # 마크다운을 그대로 저장 (HTML 변환하지 않음)
     post = Post.objects.create(
         title=title,
@@ -16,6 +18,7 @@ def create_post(title, content, author, category, image=None, tags=None):
         author=author,
         category=category,
         image=image,
+        is_public=is_public,
     )
 
     # 태그 처리
@@ -29,29 +32,6 @@ def create_post(title, content, author, category, image=None, tags=None):
         post.tags.set(tag_objects)
 
     return post
-
-
-# 게시글 조회 로직
-def get_posts_by_title(search_query):
-    return Post.objects.filter(
-        Q(title__icontains=search_query) | Q(content__icontains=search_query)
-    ).order_by("-created_at")
-
-
-# 카테고리 조회 로직
-def get_posts_by_category(search_query):
-    return Post.objects.filter(category__name__icontains=search_query).order_by(
-        "-created_at"
-    )
-
-
-# 태그 조회 로직
-def get_posts_by_tag(search_query):
-    return (
-        Post.objects.filter(tags__name__icontains=search_query)
-        .order_by("-created_at")
-        .distinct()
-    )
 
 
 # 작성자 조회 로직
@@ -68,3 +48,14 @@ def get_category_post_count(user):
         count = Post.objects.filter(author=user, category=category).count()
         category_counts[category.id] = count
     return category_counts
+
+
+# 조회수 증가
+def increase_view_count(post):
+    post.view_count += 1
+    post.save()
+
+
+# 공개 여부 조회
+def get_public_posts():
+    return Post.objects.filter(is_public=True)

@@ -50,6 +50,28 @@
     padding-left: 2em;
     margin-bottom: 16px;
 }
+
+.tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+.tag-item {
+    background-color: #e9ecef;
+    border-radius: 15px;
+    padding: 0.3rem 0.8rem;
+    font-size: 0.9rem;
+    color: #495057;
+    white-space: nowrap;
+}
+.tag-item:hover {
+    background-color: #dee2e6;
+    color: #212529;
+    text-decoration: none;
+}
+.more-tags {
+    cursor: pointer;
+}
 </style>
 
 {% block content %}
@@ -82,9 +104,20 @@
                     </div>
 
                     <div class="mb-4">
-                        {% for tag in post.tags.all %}
-                        <span class="badge bg-secondary me-1">{{ tag.name }}</span>
-                        {% endfor %}
+                        <!-- 태그 표시 부분 -->
+                        <div class="tags mt-3">
+                            {% for tag in post.tags.all|slice:":3" %}
+                            <a href="{% url 'posts:post_list' %}?search={{ tag.name }}" class="tag-item text-decoration-none">
+                                #{{ tag.name }}
+                            </a>
+                            {% endfor %}
+                            {% if post.tags.count > 3 %}
+                            <span class="tag-item more-tags" data-bs-toggle="tooltip" 
+                                  title="{% for tag in post.tags.all|slice:'3:' %}#{{ tag.name }}{% if not forloop.last %}, {% endif %}{% endfor %}">
+                                ...
+                            </span>
+                            {% endif %}
+                        </div>
                     </div>
 
                     <div class="card-text mb-4">
@@ -231,6 +264,12 @@ document.addEventListener('DOMContentLoaded', (event) => {
     // 코드 블록 하이라이트 적용
     document.querySelectorAll('pre code').forEach((block) => {
         hljs.highlightElement(block);
+    });
+
+    // 툴팁 초기화
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl)
     });
 });
 </script>

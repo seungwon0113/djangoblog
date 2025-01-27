@@ -8,11 +8,16 @@
                 <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
                     <h3 class="mb-0">게시글 작성</h3>
                     <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="isPublic" checked>
+                        <label class="form-check-label" for="isPublic">
+                            <i class="bi bi-unlock" id="lockIcon"></i>
+                        </label>
                     </div>
                 </div>
                 <div class="card-body">
                     <form method="post" enctype="multipart/form-data">
                         {% csrf_token %}
+                        <input type="hidden" name="is_public" id="isPublicHidden" value="true">
                         <div class="mb-3">
                             <label for="title" class="form-label">제목</label>
                             <input type="text" class="form-control" id="title" name="title" required>
@@ -49,8 +54,12 @@
                         </div>
                         <div class="mb-3">
                             <label for="tags" class="form-label">태그</label>
-                            <input type="text" class="form-control" id="tags" name="tags" placeholder="쉼표로 구분하여 입력">
-                            <div class="form-text">예: 태그1, 태그2, 태그3</div>
+                            <div class="tag-input-wrapper">
+                                <input type="text" class="form-control" id="tagInput" placeholder="태그입력 후 스페이스바를 누르세요">
+                                <div id="tagContainer" class="mt-2"></div>
+                                <input type="hidden" name="tags" id="tagsHidden">
+                            </div>
+                            <div class="form-text">스페이스바를 누르면 태그가 추가됩니다.</div>
                         </div>
                         <div class="d-grid gap-2">
                             <button type="submit" class="btn btn-primary">
@@ -103,6 +112,29 @@
     background-color: white;
     padding: 20px !important;
 }
+
+.tag-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+.tag-item {
+    background-color: #e9ecef;
+    border-radius: 15px;
+    padding: 0.3rem 0.8rem;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+.tag-remove {
+    cursor: pointer;
+    color: #666;
+}
+.tag-remove:hover {
+    color: #dc3545;
+}
 </style>
 
 <!-- marked.js 추가 -->
@@ -132,26 +164,19 @@ contentTextarea.addEventListener('input', (e) => {
     const content = e.target.value;
     
     // 백틱 3개를 입력했을 때
+    // 처음에만 코드 블록 추가 하도록 수정
     if (content.slice(pos-3, pos) === '```') {
-        // 현재 줄의 시작 위치 찾기
-        const lineStart = content.lastIndexOf('\n', pos-4) + 1;
-        // 현재 줄이 비어있는지 확인
-        const currentLine = content.slice(lineStart, pos-3).trim();
-        
-        if (currentLine === '') {
-            // 코드 블록 시작
-            const beforeText = content.slice(0, pos-3);
-            const afterText = content.slice(pos);
-            e.target.value = beforeText + '```\n\n```' + afterText;
+        // 이전 줄이 비어있거나 문서의 시작인 경우
+        const afterText = content.slice(pos);
+        if (!afterText || afterText.endsWith('\n')) {
+            // 단순히 줄바꿈만 추가
+            e.target.value = content + '\n\n```';
+            // 커서를 중간으로 이동
             e.target.selectionStart = pos + 1;
             e.target.selectionEnd = pos + 1;
             e.preventDefault();
         }
-    }
-    
-    // 미리보기 모드일 때 업데이트
-    if (!preview.classList.contains('d-none')) {
-        updatePreview();
+
     }
 });
 
@@ -184,5 +209,77 @@ function updatePreview() {
 
 // 초기 상태 설정
 editButton.classList.add('active');
+
+document.addEventListener('DOMContentLoaded', function() {
+    const tagInput = document.getElementById('tagInput');
+    const tagContainer = document.getElementById('tagContainer');
+    const tagsHidden = document.getElementById('tagsHidden');
+    let tags = [];
+
+    function updateTags() {
+        // 태그 컨테이너 업데이트
+        tagContainer.innerHTML = `
+            <div class="tag-list">
+                ${tags.map(tag => `
+                    <span class="tag-item">
+                        ${tag}
+                        <i class="bi bi-x tag-remove" data-tag="${tag}"></i>
+                    </span>
+                `).join('')}
+            </div>
+        `;
+        
+        // hidden input 업데이트
+        tagsHidden.value = tags.join(',');
+
+        // 삭제 버튼에 이벤트 리스너 추가
+        document.querySelectorAll('.tag-remove').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const tagToRemove = this.dataset.tag;
+                tags = tags.filter(tag => tag !== tagToRemove);
+                updateTags();
+            });
+        });
+    }
+
+    tagInput.addEventListener('keyup', function(e) {
+        if (e.key === ' ' || e.key === 'Enter') {
+            e.preventDefault();
+            let tagText = this.value.trim();
+            
+            // # 없으면 추가
+            if (!tagText.startsWith('#')) {
+                tagText = '#' + tagText;
+            }
+            
+            // 중복 체크 및 빈 태그 체크
+            if (tagText !== '#' && !tags.includes(tagText)) {
+                tags.push(tagText);
+                updateTags();
+                this.value = '';
+            }
+        }
+    });
+
+    // 폼 제출 전 태그 정리
+    document.querySelector('form').addEventListener('submit', function(e) {
+        // # 제거하고 저장 (모든 #을 제거한 후 저장)
+        tagsHidden.value = tags.map(tag => tag.replace(/^#+/, '')).join(',');
+    });
+});
+
+// 토글 변경 시 hidden input 값 업데이트
+document.getElementById('isPublic').addEventListener('change', function() {
+    const lockIcon = document.getElementById('lockIcon');
+    const hiddenInput = document.getElementById('isPublicHidden');
+    
+    if (this.checked) {
+        lockIcon.className = 'bi bi-unlock';
+        hiddenInput.value = 'true';
+    } else {
+        lockIcon.className = 'bi bi-lock';
+        hiddenInput.value = 'false';
+    }
+});
 </script>
 {% endblock %}
