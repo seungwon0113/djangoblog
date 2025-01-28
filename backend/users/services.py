@@ -7,7 +7,20 @@ class UserService:
         return User.objects.get(username=username)
 
     @staticmethod
-    def create_user(username, password, email, phone, user_image=None):
+    def check_email_exists(email):
+        return User.objects.filter(email=email).exists()
+
+    @staticmethod
+    def check_username_exists(username):
+        return User.objects.filter(username=username).exists()
+
+    @staticmethod
+    def create_user(username, password, email, phone=None, user_image=None):
+        if UserService.check_username_exists(username):
+            raise ValueError("이미 사용 중인 아이디입니다.")
+        if UserService.check_email_exists(email):
+            raise ValueError("이미 사용 중인 이메일입니다.")
+
         return User.objects.create_user(
             username=username,
             password=password,

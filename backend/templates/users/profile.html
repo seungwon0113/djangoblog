@@ -113,7 +113,7 @@
                     </div>
                     <div class="mb-3">
                         <label for="phone" class="form-label">전화번호</label>
-                        <input type="tel" class="form-control" id="phone" name="phone" value="{{ user.phone }}">
+                        <input type="text" class="form-control phone-input" id="phone" name="phone" value="{{ user.phone }}" placeholder="010-1234-5678">
                     </div>
                     <div class="mb-3">
                         <label for="user_image" class="form-label">프로필 이미지</label>
@@ -135,4 +135,21 @@
         </div>
     </div>
 </div>
+
+<!-- 페이지 하단에 script 추가 -->
+{% block extra_scripts %}
+<script>
+document.querySelectorAll('.phone-input').forEach(function(input) {
+    input.addEventListener('input', function(e) {
+        let value = e.target.value.replace(/[^0-9]/g, '');
+        if (value.length > 3 && value.length <= 7) {
+            value = value.slice(0,3) + "-" + value.slice(3);
+        } else if (value.length > 7) {
+            value = value.slice(0,3) + "-" + value.slice(3,7) + "-" + value.slice(7,11);
+        }
+        e.target.value = value;
+    });
+});
+</script>
+{% endblock %}
 {% endblock %}

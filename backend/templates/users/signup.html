@@ -9,6 +9,11 @@
                     <h4 class="mb-0">회원가입</h4>
                 </div>
                 <div class="card-body">
+                    {% if error %}
+                    <div class="alert alert-danger" role="alert">
+                        {{ error }}
+                    </div>
+                    {% endif %}
                     <form method="post">
                         {% csrf_token %}
                         <div class="mb-3">
@@ -20,6 +25,13 @@
                             <input type="email" class="form-control" id="email" name="email" required>
                         </div>
                         <div class="mb-3">
+                            <label for="phone" class="form-label">
+                                전화번호 <small class="text-muted">(선택사항)</small>
+                            </label>
+                            <input type="tel" class="form-control phone-input" id="phone" name="phone" placeholder="010-1234-5678" maxlength="13">
+                            <div class="form-text text-muted">하이픈(-)은 자동으로 입력됩니다.</div>
+                        </div>
+                        <div class="mb-3">
                             <label for="password1" class="form-label">비밀번호</label>
                             <input type="password" class="form-control" id="password1" name="password1" required>
                         </div>
@@ -27,11 +39,6 @@
                             <label for="password2" class="form-label">비밀번호 확인</label>
                             <input type="password" class="form-control" id="password2" name="password2" required>
                         </div>
-                        {% if error %}
-                        <div class="alert alert-danger" role="alert">
-                            {{ error }}
-                        </div>
-                        {% endif %}
                         <div class="d-grid gap-2">
                             <button type="submit" class="btn btn-primary">
                                 <i class="bi bi-person-plus"></i> 가입하기
@@ -46,4 +53,43 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const phoneInput = document.querySelector('input[name="phone"]');
+if (phoneInput) {
+    let previousValue = '';
+    
+    phoneInput.addEventListener('input', function(e) {
+        // 백스페이스로 지우는 경우 이전 값보다 길이가 짧아졌다면 그대로 둠
+        if (e.target.value.length < previousValue.length) {
+            previousValue = e.target.value;
+            return;
+        }
+        
+        let value = e.target.value.replace(/[^0-9]/g, '');
+        
+        if (value.length > 11) {
+            value = value.slice(0, 11);
+        }
+        
+        if (value.length >= 3 && value.length < 7) {
+            value = value.slice(0, 3) + '-' + value.slice(3);
+        } else if (value.length >= 7) {
+            value = value.slice(0, 3) + '-' + value.slice(3, 7) + '-' + value.slice(7);
+        }
+        
+        e.target.value = value;
+        previousValue = value;
+    });
+
+    // 백스페이스 키 처리
+    phoneInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Backspace' && e.target.value.slice(-1) === '-') {
+            e.target.value = e.target.value.slice(0, -1);
+        }
+    });
+}
+</script>
 {% endblock %}

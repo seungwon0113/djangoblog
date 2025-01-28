@@ -3,6 +3,7 @@ from django.contrib.auth import authenticate
 from django.contrib.auth import login as auth_login
 from django.contrib.auth import logout
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db import IntegrityError
 from django.shortcuts import redirect, render
 from django.views.generic import View
 
@@ -55,6 +56,7 @@ class UserSignupView(View):
         try:
             username = request.POST.get("username")
             email = request.POST.get("email")
+            phone = request.POST.get("phone")
             password1 = request.POST.get("password1")
             password2 = request.POST.get("password2")
 
@@ -64,15 +66,15 @@ class UserSignupView(View):
 
             # 사용자 생성
             user = UserService.create_user(
-                username=username,
-                password=password1,  # password1을 password로 전달
-                email=email,
+                username=username, password=password1, email=email, phone=phone
             )
 
             # 로그인 처리
             auth_login(request, user)
             return redirect("index")
 
+        except ValueError as e:
+            return render(request, "users/signup.html", {"error": str(e)})
         except Exception as e:
             return render(request, "users/signup.html", {"error": str(e)})
 
