@@ -94,20 +94,20 @@ jobs:
 
     - name: Create .env file
       run: |
-        cat << EOF > .env
-        DJANGO_SECRET_KEY=django-insecure-test-key
-        DB_NAME=${{ secrets.DB_NAME }}
-        DB_USER=${{ secrets.DB_USER }}
-        DB_PASSWORD=${{ secrets.DB_PASSWORD }}
-        DB_HOST=database
-        DB_PORT=5432
-        DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}
-        EMAIL_HOST=smtp.gmail.com
-        EMAIL_PORT=587
-        EMAIL_USE_TLS=True
-        EMAIL_HOST_USER=${{ secrets.EMAIL_HOST_USER }}
-        EMAIL_HOST_PASSWORD=${{ secrets.EMAIL_HOST_PASSWORD }}
-        EOF
+        cat << 'EOF' > .env
+DJANGO_SECRET_KEY=django-insecure-test-key
+DB_NAME=${{ secrets.DB_NAME }}
+DB_USER=${{ secrets.DB_USER }}
+DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+DB_HOST=database
+DB_PORT=5432
+DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_USE_TLS=True
+EMAIL_HOST_USER=${{ secrets.EMAIL_HOST_USER }}
+EMAIL_HOST_PASSWORD=${{ secrets.EMAIL_HOST_PASSWORD }}
+EOF
       
     - name: Build and Test Docker Compose
       env:
