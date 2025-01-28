@@ -7,8 +7,6 @@ services:
       dockerfile: Dockerfile
     image: ${DOCKER_USERNAME}/backend:latest
     platform: linux/amd64
-    ports:
-      - 8000:8000
     volumes:
       - ./backend:/backend
       - static_volume:/backend/static
@@ -22,7 +20,20 @@ services:
       - DB_HOST=database
     networks:
       - app-network
-    command: /start.sh
+
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    volumes:
+      - static_volume:/static
+      - media_volume:/media
+    depends_on:
+      - backend
+    networks:
+      - app-network
 
   database:
     image: postgres:14
