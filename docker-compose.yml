@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   backend:
     build:
@@ -5,44 +7,56 @@ services:
       dockerfile: Dockerfile
     image: ${DOCKER_USERNAME}/backend:latest
     platform: linux/amd64
-    ports:
-      - 8000:8000
     volumes:
       - ./backend:/backend
+      - static_volume:/backend/static
+      - media_volume:/backend/media
     depends_on:
       database:
         condition: service_healthy
     env_file:
       - .env
+    environment:
+      - DB_HOST=database
     networks:
       - app-network
-    command: /start.sh
+
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    volumes:
+      - static_volume:/static
+      - media_volume:/media
+    depends_on:
+      - backend
+    networks:
+      - app-network
 
   database:
-    build:
-      context: ./database
-      dockerfile: Dockerfile
-    image: ${DOCKER_USERNAME}/database:latest
-    platform: linux/amd64
-    ports:
-      - 5432:5432
-    volumes:
-      - ./database:/docker-entrypoint-initdb.d
-      - postgres_data:/var/lib/postgresql/data
+    image: postgres:14
     environment:
       - POSTGRES_DB=${DB_NAME}
       - POSTGRES_USER=${DB_USER}
       - POSTGRES_PASSWORD=${DB_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
     networks:
       - app-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
-      interval: 5s
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
+      interval: 10s
       timeout: 5s
       retries: 5
 
 volumes:
   postgres_data:
+  static_volume:
+  media_volume:
 
 networks:
   app-network:
