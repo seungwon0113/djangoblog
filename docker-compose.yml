@@ -4,6 +4,7 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     image: ${DOCKER_USERNAME}/backend:latest
+    platform: linux/amd64
     ports:
       - 8000:8000
     volumes:
@@ -22,6 +23,7 @@ services:
       context: ./database
       dockerfile: Dockerfile
     image: ${DOCKER_USERNAME}/database:latest
+    platform: linux/amd64
     ports:
       - 5432:5432
     volumes:
