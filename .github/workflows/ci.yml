@@ -84,6 +84,14 @@ jobs:
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
 
+    - name: Install Docker Compose V2
+      run: |
+        DOCKER_CONFIG=${DOCKER_CONFIG:-$HOME/.docker}
+        mkdir -p $DOCKER_CONFIG/cli-plugins
+        curl -SL https://github.com/docker/compose/releases/download/v2.24.5/docker-compose-linux-x86_64 -o $DOCKER_CONFIG/cli-plugins/docker-compose
+        chmod +x $DOCKER_CONFIG/cli-plugins/docker-compose
+        docker compose version
+
     - name: Create .env file
       run: |
         echo "DJANGO_SECRET_KEY=django-insecure-test-key" > .env
@@ -105,12 +113,12 @@ jobs:
         DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
       run: |
         # 데이터베이스 시작
-        docker-compose up -d database
+        docker compose up -d database
         
         # 데이터베이스 준비 상태 확인
         echo "Waiting for database to be ready..."
         for i in {1..30}; do
-          if docker-compose exec -T database pg_isready -U djangoblog; then
+          if docker compose exec -T database pg_isready -U djangoblog; then
             echo "Database is ready!"
             break
           fi
@@ -119,17 +127,17 @@ jobs:
         done
         
         # 백엔드 빌드 및 시작
-        docker-compose build backend
-        docker-compose up -d backend
+        docker compose build backend
+        docker compose up -d backend
         sleep 10
         
         # 컨테이너 상태 확인
-        docker-compose ps
-        docker-compose logs
+        docker compose ps
+        docker compose logs
         
         # 테스트 실행
-        docker-compose exec -T backend poetry run python manage.py test
+        docker compose exec -T backend poetry run python manage.py test
         
     - name: Clean up
       if: always()
-      run: docker-compose down -v
+      run: docker compose down -v
