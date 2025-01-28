@@ -64,26 +64,55 @@ jobs:
       run: |
         poetry run python manage.py test
 
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v3
+    
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
       
+    - name: Debug Secrets
+      run: |
+        if [ -n "${{ secrets.DOCKER_USERNAME }}" ]; then
+          echo "DOCKER_USERNAME is set"
+        else
+          echo "DOCKER_USERNAME is not set"
+        fi
+        if [ -n "${{ secrets.DOCKER_PASSWORD }}" ]; then
+          echo "DOCKER_PASSWORD is set"
+        else
+          echo "DOCKER_PASSWORD is not set"
+        fi
+
     - name: Docker Login
       uses: docker/login-action@v3
       with:
+        registry: docker.io
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
     
     - name: Create .env file
       run: |
-        echo "DJANGO_SECRET_KEY=django-insecure-test-key" > .env
-        echo "DB_NAME=djangoblog" >> .env
-        echo "DB_USER=djangoblog" >> .env
-        echo "DB_PASSWORD=djangoblog" >> .env
-        echo "DB_HOST=database" >> .env
-        echo "DB_PORT=5432" >> .env
-        echo "DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}" >> .env
+        cat << EOF > .env
+        DJANGO_SECRET_KEY=django-insecure-test-key
+        DB_NAME=djangoblog
+        DB_USER=djangoblog
+        DB_PASSWORD=djangoblog
+        DB_HOST=database
+        DB_PORT=5432
+        DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}
+        EOF
     
-    - name: Build and push Docker images
+    - name: Build Docker images
+      run: docker compose build
+      
+    - name: List Docker images
+      run: docker images
+      
+    - name: Push Docker images
       run: |
-        docker compose build
-        docker compose push
+        docker compose push || {
+          echo "Push failed. Checking Docker login status..."
+          docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin <<< "${{ secrets.DOCKER_PASSWORD }}"
+          echo "Retrying push..."
+          docker compose push
+        }
