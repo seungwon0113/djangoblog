@@ -1,5 +1,6 @@
 FROM postgres:14
 
-COPY docker-entrypoint-initdb.d/ /docker-entrypoint-initdb.d/
+# init.sql 파일을 직접 복사
+COPY init.sql /docker-entrypoint-initdb.d/
 
 CMD ["postgres"]

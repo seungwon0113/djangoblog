@@ -1,6 +1,9 @@
 services:
   backend:
-    build: ./backend
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: ${DOCKER_USERNAME}/backend:latest
     ports:
       - 8000:8000
     volumes:
@@ -12,10 +15,13 @@ services:
       - .env
     networks:
       - app-network
-    command: poetry run python manage.py runserver 0.0.0.0:8000
+    command: /start.sh
 
   database:
-    image: postgres:14
+    build:
+      context: ./database
+      dockerfile: Dockerfile
+    image: ${DOCKER_USERNAME}/database:latest
     ports:
       - 5432:5432
     volumes:

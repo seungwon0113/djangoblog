@@ -16,6 +16,7 @@ markdown = "^3.7"
 python-markdown-math = "^0.8"
 isort = "^5.13.2"
 coverage = "^7.6.10"
+gunicorn = "^23.0.0"
 
 [tool.poetry.group.dev.dependencies]
 flake8 = "^7.0.0"

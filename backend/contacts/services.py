@@ -17,7 +17,7 @@ class InquiryService:
     @staticmethod
     def send_inquiry_email(inquiry: Inquiry):
         try:
-            action =  "접수"
+            action = "접수"
             subject = f"[Slog] 새로운 문의가 {action}되었습니다."
             message = f"""
 안녕하세요, Slog 관리자님

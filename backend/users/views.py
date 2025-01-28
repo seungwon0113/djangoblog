@@ -1,4 +1,8 @@
-from django.contrib.auth import authenticate, login, logout
+from django.contrib import messages
+from django.contrib.auth import authenticate
+from django.contrib.auth import login as auth_login
+from django.contrib.auth import logout
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import redirect, render
 from django.views.generic import View
 
@@ -8,7 +12,10 @@ from users.services import UserService
 
 
 # user_profile View
-class UserProfileView(View):
+class UserProfileView(LoginRequiredMixin, View):
+    login_url = "/users/login/"  # 로그인이 필요할 때 리다이렉트할 URL
+    redirect_field_name = "next"  # 로그인 후 원래 페이지로 돌아가기 위한 파라미터 이름
+
     def get(self, request):
         try:
             if not request.user.is_authenticated:
@@ -30,6 +37,7 @@ class UserProfileView(View):
                 "users/profile.html",
                 {
                     "user": user,
+                    "user_image": user.user_image,
                     "categories": categories,
                     "category_post_count": category_post_count,
                 },
@@ -62,7 +70,7 @@ class UserSignupView(View):
             )
 
             # 로그인 처리
-            login(request, user)
+            auth_login(request, user)
             return redirect("index")
 
         except Exception as e:
@@ -73,46 +81,48 @@ class UserSignupView(View):
 class UserUpdateView(View):
     def post(self, request):
         try:
+            # 이미지 파일이 있는 경우에만 처리
+            user_image = request.FILES.get("user_image")
+
             user = UserService.update_user(
                 request.user,
                 username=request.POST.get("username"),
                 email=request.POST.get("email"),
                 phone=request.POST.get("phone"),
+                user_image=user_image if user_image else request.user.user_image,
             )
             return redirect("users:user_profile")
         except Exception as e:
-            # 에러가 발생하면 프로필 페이지로 돌아가서 에러 메시지 표시
-            return render(
-                request, "users/profile.html", {"user": request.user, "error": str(e)}
-            )
+            messages.error(request, str(e))
+            return redirect("users:user_profile")
 
 
 # user_login View
 class UserLoginView(View):
     def get(self, request):
-        return render(
-            request, "users/login.html", {"next": request.GET.get("next", "")}
-        )
+        if request.user.is_authenticated:
+            return redirect("posts:post_list")
+        return render(request, "users/login.html")
 
     def post(self, request):
-        user = authenticate(
-            request,
-            username=request.POST.get("username"),
-            password=request.POST.get("password"),
-        )
-        if user is not None:
-            login(request, user)
-            next_url = request.POST.get("next", "")
-            return redirect(next_url if next_url else "index")
-        else:
-            return render(
-                request,
-                "users/login.html",
-                {
-                    "error": "아이디 또는 비밀번호가 틀렸습니다.",
-                    "next": request.POST.get("next", ""),
-                },
-            )
+        username = request.POST["username"]
+        password = request.POST["password"]
+
+        try:
+            user = authenticate(request, username=username, password=password)
+            if user is not None:
+                auth_login(request, user)
+                # next 파라미터가 있으면 해당 URL로 리다이렉트
+                next_url = request.GET.get("next") or request.POST.get("next")
+                if next_url:
+                    return redirect(next_url)
+                return redirect("posts:post_list")
+            else:
+                messages.error(request, "아이디 또는 비밀번호가 올바르지 않습니다.")
+        except Exception as e:
+            messages.error(request, str(e))
+
+        return render(request, "users/login.html")
 
 
 class UserLogoutView(View):

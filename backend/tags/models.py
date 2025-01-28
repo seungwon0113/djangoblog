@@ -1,12 +1,10 @@
 from django.db import models
 
-from categories.models import Category
 from core.basemodels import BaseModel
 
 
 class Tag(BaseModel):
-    name = models.CharField(max_length=255)
-    category = models.ForeignKey(Category, on_delete=models.CASCADE)
+    name = models.CharField(max_length=50)
 
     def __str__(self):
         return self.name
