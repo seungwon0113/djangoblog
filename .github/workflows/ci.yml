@@ -10,6 +10,9 @@ jobs:
   build:
     runs-on: ubuntu-latest
     environment: production
+    permissions:
+      contents: read
+      packages: write
     
     services:
       postgres:
@@ -61,9 +64,14 @@ jobs:
       run: |
         poetry run python manage.py test
 
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+      
     - name: Docker Login
-      run: |
-        echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
     
     - name: Create .env file
       run: |
@@ -76,8 +84,6 @@ jobs:
         echo "DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}" >> .env
     
     - name: Build and push Docker images
-      env:
-        DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
       run: |
         docker compose build
         docker compose push
