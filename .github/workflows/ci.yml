@@ -90,7 +90,7 @@ jobs:
         echo "DB_NAME=djangoblog" >> .env
         echo "DB_USER=djangoblog" >> .env
         echo "DB_PASSWORD=djangoblog" >> .env
-        echo "DB_HOST=database" >> .env
+        echo "DB_HOST=localhost" >> .env
         echo "DB_PORT=5432" >> .env
       
     - name: Build and Test Docker Compose
@@ -99,21 +99,14 @@ jobs:
         DB_NAME: djangoblog
         DB_USER: djangoblog
         DB_PASSWORD: djangoblog
-        DB_HOST: database
+        DB_HOST: localhost
         DB_PORT: 5432
         DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
       run: |
-        # 전체 빌드 먼저 실행
-        docker-compose build
-        
-        # 데이터베이스 시작 및 로그 확인
+        # 데이터베이스 시작
         docker-compose up -d database
-        echo "Database container status:"
-        docker ps -a
-        echo "Database logs:"
-        docker-compose logs database
         
-        # 데이터베이스 준비 상태 확인 (더 긴 타임아웃)
+        # 데이터베이스 준비 상태 확인
         echo "Waiting for database to be ready..."
         for i in {1..30}; do
           if docker-compose exec -T database pg_isready -U djangoblog; then
@@ -124,18 +117,15 @@ jobs:
           sleep 2
         done
         
-        # 백엔드 시작
-        echo "Starting backend..."
+        # 백엔드 시작 및 테스트
         docker-compose up -d backend
+        sleep 10  # 백엔드 컨테이너가 완전히 시작될 때까지 대기
         
-        echo "All container status:"
+        # 컨테이너 상태 확인
         docker-compose ps
-        
-        echo "Backend logs:"
-        docker-compose logs backend
+        docker-compose logs
         
         # 테스트 실행
-        docker-compose exec -T backend poetry run python manage.py migrate
         docker-compose exec -T backend poetry run python manage.py test
         
     - name: Clean up
