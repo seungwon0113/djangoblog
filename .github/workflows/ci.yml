@@ -94,13 +94,20 @@ jobs:
 
     - name: Create .env file
       run: |
-        echo "DJANGO_SECRET_KEY=django-insecure-test-key" > .env
-        echo "DB_NAME=djangoblog" >> .env
-        echo "DB_USER=djangoblog" >> .env
-        echo "DB_PASSWORD=djangoblog" >> .env
-        echo "DB_HOST=database" >> .env
-        echo "DB_PORT=5432" >> .env
-        echo "DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}" >> .env
+        cat << EOF > .env
+        DJANGO_SECRET_KEY=django-insecure-test-key
+        DB_NAME=${{ secrets.DB_NAME }}
+        DB_USER=${{ secrets.DB_USER }}
+        DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+        DB_HOST=database
+        DB_PORT=5432
+        DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}
+        EMAIL_HOST=smtp.gmail.com
+        EMAIL_PORT=587
+        EMAIL_USE_TLS=True
+        EMAIL_HOST_USER=${{ secrets.EMAIL_HOST_USER }}
+        EMAIL_HOST_PASSWORD=${{ secrets.EMAIL_HOST_PASSWORD }}
+        EOF
       
     - name: Build and Test Docker Compose
       env:
@@ -111,6 +118,11 @@ jobs:
         DB_HOST: database
         DB_PORT: 5432
         DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+        EMAIL_HOST: smtp.gmail.com
+        EMAIL_PORT: 587
+        EMAIL_USE_TLS: True
+        EMAIL_HOST_USER: ${{ secrets.EMAIL_HOST_USER }}
+        EMAIL_HOST_PASSWORD: ${{ secrets.EMAIL_HOST_PASSWORD }}
       run: |
         # 데이터베이스 시작
         docker compose up -d database
@@ -118,7 +130,7 @@ jobs:
         # 데이터베이스 준비 상태 확인
         echo "Waiting for database to be ready..."
         for i in {1..30}; do
-          if docker compose exec -T database pg_isready -U djangoblog; then
+          if docker compose exec -T database pg_isready -U ${{ secrets.DB_USER }}; then
             echo "Database is ready!"
             break
           fi
