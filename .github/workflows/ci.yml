@@ -105,9 +105,9 @@ jobs:
     - name: Build and Test Docker Compose
       env:
         DJANGO_SECRET_KEY: django-insecure-test-key
-        DB_NAME: djangoblog
-        DB_USER: djangoblog
-        DB_PASSWORD: djangoblog
+        DB_NAME: ${{ secrets.DB_NAME }}
+        DB_USER: ${{ secrets.DB_USER }}
+        DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
         DB_HOST: database
         DB_PORT: 5432
         DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
