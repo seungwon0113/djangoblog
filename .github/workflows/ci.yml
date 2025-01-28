@@ -101,6 +101,7 @@ jobs:
         DB_PASSWORD: djangoblog
         DB_HOST: database
         DB_PORT: 5432
+        DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
       run: |
         # 전체 빌드 먼저 실행
         docker-compose build
