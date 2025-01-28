@@ -60,6 +60,9 @@ jobs:
       run: |
         poetry run python manage.py test
 
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v3
+
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
 
@@ -68,19 +71,24 @@ jobs:
       with:
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
+        logout: false
     
     - name: Create .env file
       run: |
-        echo "DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}" > .env
-        echo "DB_NAME=djangoblog" >> .env
-        echo "DB_USER=${{ secrets.DB_USER }}" >> .env
-        echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
-        echo "DB_HOST=database" >> .env
-        echo "DB_PORT=5432" >> .env
+        cat << EOF > .env
+        DJANGO_SECRET_KEY=django-insecure-test-key
+        DB_NAME=djangoblog
+        DB_USER=${{ secrets.DB_USER }}
+        DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+        DB_HOST=database
+        DB_PORT=5432
+        DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}
+        EOF
     
     - name: Build and push Docker images
       env:
         DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
       run: |
+        echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
         docker compose build
         docker compose push
