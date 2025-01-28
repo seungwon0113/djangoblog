@@ -10,6 +10,10 @@ done
 echo "Running migrations..."
 poetry run python manage.py migrate
 
-# 서버 시작
-echo "Starting server..."
-poetry run python manage.py runserver 0.0.0.0:8000
+# 정적 파일 수집
+echo "Collecting static files..."
+poetry run python manage.py collectstatic --noinput
+
+# Gunicorn으로 서버 시작
+echo "Starting Gunicorn server..."
+poetry run gunicorn --bind 0.0.0.0:8000 config.wsgi:application
