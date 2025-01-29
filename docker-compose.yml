@@ -18,12 +18,14 @@ services:
       - .env
     environment:
       - DB_HOST=database
+      - PYTHONUNBUFFERED=1
     networks:
       - app-network
     command: >
       sh -c "python manage.py migrate &&
              python manage.py collectstatic --noinput &&
              gunicorn config.wsgi:application --bind 0.0.0.0:8000"
+    restart: always
 
   nginx:
     build:
