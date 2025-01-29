@@ -38,6 +38,7 @@ ALLOWED_HOSTS = [
     "211.188.60.26",
     "localhost",
     "127.0.0.1",
+    "*",  # 개발 중에는 모든 호스트 허용
 ]
 
 
@@ -182,16 +183,7 @@ CSRF_USE_SESSIONS = False
 CSRF_COOKIE_HTTPONLY = False
 
 # CORS 설정
-CORS_ALLOWED_ORIGINS = [
-    "http://slog.my",
-    "http://www.slog.my",
-    "http://211.188.60.26",
-    "https://slog.my",
-    "https://www.slog.my",
-    "http://localhost",
-    "http://127.0.0.1",
-]
-
+CORS_ALLOW_ALL_ORIGINS = True  # 개발 중에는 모든 오리진 허용
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_METHODS = [
     'DELETE',
