@@ -32,7 +32,13 @@ SECRET_KEY = env("DJANGO_SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["211.188.60.26", "localhost", "127.0.0.1", "0.0.0.0"]
+ALLOWED_HOSTS = [
+    "slog.my",
+    "www.slog.my",
+    "211.188.60.26",
+    "localhost",
+    "127.0.0.1",
+]
 
 
 # Application definition
@@ -155,3 +161,10 @@ EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD")
 EMAIL_HOST = env("EMAIL_HOST")
 EMAIL_PORT = env("EMAIL_PORT")
 EMAIL_USE_TLS = env("EMAIL_USE_TLS")
+
+# CSRF 설정 추가
+CSRF_TRUSTED_ORIGINS = [
+    "http://slog.my",
+    "http://www.slog.my",
+    "http://211.188.60.26",
+]
