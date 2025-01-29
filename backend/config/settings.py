@@ -168,3 +168,13 @@ CSRF_TRUSTED_ORIGINS = [
     "http://www.slog.my",
     "http://211.188.60.26",
 ]
+
+# Security Settings
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+SECURE_BROWSER_XSS_FILTER = True
+SESSION_COOKIE_SECURE = False  # HTTPS 사용시 True로 변경
+CSRF_COOKIE_SECURE = False    # HTTPS 사용시 True로 변경
+
+# CORS 설정
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_CREDENTIALS = True
