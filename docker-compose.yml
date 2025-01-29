@@ -32,6 +32,7 @@ services:
     volumes:
       - static_volume:/static
       - media_volume:/media
+      - ./certbot/www:/var/www/certbot
     depends_on:
       - backend
     networks:
@@ -54,6 +55,13 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
+  certbot:
+    image: certbot/certbot
+    volumes:
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    command: certonly --webroot -w /var/www/certbot --force-renewal --email jungseungwon0113@gmail.com -d slog.my -d www.slog.my --agree-tos --no-eff-email
 
 volumes:
   postgres_data:
