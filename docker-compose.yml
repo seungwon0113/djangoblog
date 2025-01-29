@@ -7,6 +7,8 @@ services:
       dockerfile: Dockerfile
     image: ${DOCKER_USERNAME}/backend:latest
     platform: linux/amd64
+    ports:
+      - "8000:8000"
     volumes:
       - ./backend:/backend
       - static_volume:/backend/static
@@ -20,6 +22,7 @@ services:
       - DB_HOST=database
     networks:
       - app-network
+    command: gunicorn config.wsgi:application --bind 0.0.0.0:8000
 
   nginx:
     build:
