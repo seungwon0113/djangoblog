@@ -7,8 +7,10 @@ services:
       dockerfile: Dockerfile
     volumes:
       - ./backend:/backend
-      - static_volume:/backend/static
-      - media_volume:/backend/media
+      - ./backend/static:/backend/static
+      - ./backend/media:/backend/media
+    ports:
+      - "8000:8000"
     depends_on:
       database:
         condition: service_healthy
@@ -17,12 +19,15 @@ services:
     environment:
       - DB_HOST=database
       - PYTHONUNBUFFERED=1
+      - DEBUG=True
+    command: >
+      sh -c "mkdir -p /backend/media/images &&
+             chmod -R 777 /backend/media &&
+             python manage.py migrate &&
+             python manage.py collectstatic --noinput &&
+             python manage.py runserver 0.0.0.0:8000"
     networks:
       - app-network
-    command: >
-      sh -c "python manage.py migrate &&
-             python manage.py collectstatic --noinput &&
-             gunicorn config.wsgi:application --bind 0.0.0.0:8000"
     restart: always
 
   nginx:
@@ -32,10 +37,10 @@ services:
     ports:
       - "80:80"
     volumes:
-      - static_volume:/static
-      - media_volume:/media
+      - ./backend/static:/static
+      - ./backend/media:/media
       - ./logs/nginx:/var/log/nginx
-      - ./nginx/nginx.dev.conf:/etc/nginx/nginx.conf
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
     depends_on:
       - backend
     networks:
@@ -63,8 +68,6 @@ services:
 
 volumes:
   postgres_data:
-  static_volume:
-  media_volume:
 
 networks:
   app-network:
