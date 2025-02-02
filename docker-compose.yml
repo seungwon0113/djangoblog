@@ -18,8 +18,14 @@ services:
       - .env
     environment:
       - DB_HOST=database
+      - PYTHONUNBUFFERED=1
     networks:
       - app-network
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py collectstatic --noinput &&
+             gunicorn config.wsgi:application --bind 0.0.0.0:8000"
+    restart: always
 
   nginx:
     build:
@@ -29,14 +35,28 @@ services:
     platform: linux/amd64
     ports:
       - "80:80"
+      - "443:443"
     volumes:
       - static_volume:/static
       - media_volume:/media
+      - ./logs/nginx:/var/log/nginx
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./certbot/conf:/etc/letsencrypt
       - ./certbot/www:/var/www/certbot
     depends_on:
       - backend
+      - certbot
     networks:
       - app-network
+    restart: always
+
+  certbot:
+    image: certbot/certbot
+    container_name: certbot
+    volumes:
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do sleep 6h & wait $${!}; certbot renew; done'"
 
   database:
     image: postgres:14
@@ -44,8 +64,6 @@ services:
       - POSTGRES_DB=${DB_NAME}
       - POSTGRES_USER=${DB_USER}
       - POSTGRES_PASSWORD=${DB_PASSWORD}
-    ports:
-      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
@@ -55,13 +73,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-
-  certbot:
-    image: certbot/certbot
-    volumes:
-      - ./certbot/conf:/etc/letsencrypt
-      - ./certbot/www:/var/www/certbot
-    command: certonly --webroot -w /var/www/certbot --force-renewal --email jungseungwon0113@gmail.com -d slog.my -d www.slog.my --agree-tos --no-eff-email
+    restart: always
 
 volumes:
   postgres_data:

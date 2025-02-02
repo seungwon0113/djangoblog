@@ -11,12 +11,12 @@ RUN apt-get update && apt-get install -y \
     postgresql-client \
     && rm -rf /var/lib/apt/lists/*
 
-# Poetry 설치 (pip를 통해 설치)
+# Poetry 설치
 RUN pip install poetry
 
 COPY poetry.lock pyproject.toml ./
 
-# Poetry 가상 환경 비활성화 (Docker 내부에서는 불필요)
+# Poetry 가상 환경 비활성화
 RUN poetry config virtualenvs.create false
 
 RUN poetry install --no-root

@@ -1,5 +1,6 @@
 from django.contrib.auth.models import (
     AbstractBaseUser,
+    AbstractUser,
     BaseUserManager,
     PermissionsMixin,
 )
@@ -13,15 +14,19 @@ class UserManager(BaseUserManager):
     def create_user(self, username, email, password=None, **extra_fields):
         if not username:
             raise ValueError("이름은 필수 입력 항목입니다.")
-        if not password:
-            raise ValueError("비밀번호는 필수 입력 항목입니다.")
         if not email:
             raise ValueError("이메일은 필수 입력 항목입니다.")
 
         user = self.model(
             username=username, email=self.normalize_email(email), **extra_fields
         )
-        user.set_password(password)
+
+        # 소셜 로그인의 경우 password가 None일 수 있음
+        if password:
+            user.set_password(password)
+        else:
+            user.set_unusable_password()
+
         user.save(using=self._db)
         return user
 
@@ -35,7 +40,11 @@ class UserManager(BaseUserManager):
         )
 
 
-class User(BaseModel, AbstractBaseUser, PermissionsMixin):
+class User(BaseModel, AbstractUser, PermissionsMixin):
+    first_name = models.CharField(max_length=150, blank=True)
+    last_name = models.CharField(max_length=150, blank=True)
+
+    # 기존 필드들
     username = models.CharField(max_length=255, unique=True)
     email = models.EmailField(unique=True)
     password = models.CharField(max_length=255)
@@ -49,13 +58,7 @@ class User(BaseModel, AbstractBaseUser, PermissionsMixin):
 
     USERNAME_FIELD = "username"
     EMAIL_FIELD = "email"
-    REQUIRED_FIELDS = ["email", "phone"]
-
-    def has_perm(self, perm, obj=None):
-        return True
-
-    def has_module_perms(self, app_label):
-        return True
+    REQUIRED_FIELDS = ["email"]
 
     def __str__(self):
         return self.username
@@ -64,3 +67,21 @@ class User(BaseModel, AbstractBaseUser, PermissionsMixin):
         db_table = "users"
         verbose_name = "사용자"
         verbose_name_plural = "사용자"
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+
+    @classmethod
+    def create_user(cls, username, email, password=None, **extra_fields):
+        if not username:
+            raise ValueError("사용자 이름은 필수 입력 항목입니다.")
+        if not email:
+            raise ValueError("이메일은 필수 입력 항목입니다.")
+
+        user = cls(username=username, email=email, **extra_fields)
+        if password:
+            user.set_password(password)
+        else:
+            user.set_unusable_password()
+        user.save()
+        return user

@@ -30,7 +30,7 @@ environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
 SECRET_KEY = env("DJANGO_SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = True  # 문제 해결 후 False로 변경
 
 ALLOWED_HOSTS = [
     "slog.my",
@@ -38,6 +38,7 @@ ALLOWED_HOSTS = [
     "211.188.60.26",
     "localhost",
     "127.0.0.1",
+    "*",  # 개발 중에는 모든 호스트 허용
 ]
 
 
@@ -50,6 +51,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django.contrib.sites",  # sites를 위로 이동
     # apps
     "users",
     "posts",
@@ -58,9 +60,18 @@ INSTALLED_APPS = [
     "contacts",
     "likes",
     "tags",
+    "corsheaders",
+    # social login
+    "allauth",
+    "allauth.account",
+    "allauth.socialaccount",
+    "allauth.socialaccount.providers.google",
+    "allauth.socialaccount.providers.naver",
+    "allauth.socialaccount.providers.kakao",
 ]
 
 MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -68,6 +79,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "allauth.account.middleware.AccountMiddleware",
 ]
 
 ROOT_URLCONF = "config.urls"
@@ -124,6 +136,27 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+# allauth 설정
+AUTHENTICATION_BACKENDS = [
+    # Django 기본 인증
+    "django.contrib.auth.backends.ModelBackend",
+    # allauth 인증
+    "allauth.account.auth_backends.AuthenticationBackend",
+]
+
+GOOGLE_CLIENT_ID = env("GOOGLE_CLIENT_ID")
+GOOGLE_SECRET = env("GOOGLE_SECRET")
+
+
+# 소셜 로그인 관련 추가 설정
+ACCOUNT_AUTHENTICATION_METHOD = "email"  # email로 인증
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_UNIQUE_EMAIL = True
+ACCOUNT_USERNAME_REQUIRED = True
+SOCIALACCOUNT_AUTO_SIGNUP = True  # 자동 회원가입
+LOGIN_REDIRECT_URL = "posts:post_list"
+ACCOUNT_LOGOUT_REDIRECT_URL = "index"
+
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
@@ -140,11 +173,11 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
-STATIC_URL = '/static/'
-STATIC_ROOT = BASE_DIR / 'static'
+STATIC_URL = "/static/"
+STATIC_ROOT = BASE_DIR / "static"
 
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
 
 # 이 설정을 추가
 
@@ -167,17 +200,55 @@ CSRF_TRUSTED_ORIGINS = [
     "http://slog.my",
     "http://www.slog.my",
     "http://211.188.60.26",
+    "https://slog.my",
+    "https://www.slog.my",
 ]
 
 # Security Settings
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-SECURE_SSL_REDIRECT = False  # 일단 False로 설정
+SECURE_PROXY_SSL_HEADER = None
+SECURE_SSL_REDIRECT = False
 SESSION_COOKIE_SECURE = False
 CSRF_COOKIE_SECURE = False
-SECURE_HSTS_SECONDS = 31536000
-SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-SECURE_HSTS_PRELOAD = True
+CSRF_USE_SESSIONS = False
+CSRF_COOKIE_HTTPONLY = False
+CSRF_COOKIE_SAMESITE = "Lax"
+SESSION_COOKIE_SAMESITE = "Lax"
+
+# HSTS 설정 제거
+SECURE_HSTS_SECONDS = 0
+SECURE_HSTS_INCLUDE_SUBDOMAINS = False
+SECURE_HSTS_PRELOAD = False
 
 # CORS 설정
-CORS_ALLOW_ALL_ORIGINS = True
+CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_ALL_ORIGINS = True
+
+CORS_ALLOWED_ORIGINS = [
+    "http://slog.my",
+    "http://www.slog.my",
+    "http://211.188.60.26",
+    "http://localhost",
+    "http://127.0.0.1",
+]
+
+CORS_ALLOW_METHODS = [
+    "DELETE",
+    "GET",
+    "OPTIONS",
+    "PATCH",
+    "POST",
+    "PUT",
+]
+
+CORS_ALLOW_HEADERS = [
+    "accept",
+    "accept-encoding",
+    "authorization",
+    "content-type",
+    "dnt",
+    "origin",
+    "user-agent",
+    "x-csrftoken",
+    "x-requested-with",
+]
