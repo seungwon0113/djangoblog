@@ -10,7 +10,7 @@ from django.shortcuts import redirect, render
 from django.views.generic import View
 
 from categories.models import Category
-from posts.services import get_category_post_count
+from posts.services import PostService
 from users.models import User
 from users.services import UserService
 
@@ -35,7 +35,7 @@ class UserProfileView(LoginRequiredMixin, View):
             user = UserService.get_user_by_username(request.user.username)
             categories = Category.objects.all()
             # 카테고리별 게시글 수 계산
-            category_post_count = get_category_post_count(user)
+            category_post_count = PostService.get_category_post_count(user)
             return render(
                 request,
                 "users/profile.html",
@@ -58,6 +58,7 @@ class UserSignupView(View):
     def post(self, request):
         try:
             username = request.POST.get("username")
+            nickname = request.POST.get("nickname")
             email = request.POST.get("email")
             phone = request.POST.get("phone")
             password1 = request.POST.get("password1")
@@ -69,11 +70,17 @@ class UserSignupView(View):
 
             # 사용자 생성
             user = UserService.create_user(
-                username=username, password=password1, email=email, phone=phone
+                username=username,
+                nickname=nickname,
+                password=password1,
+                email=email,
+                phone=phone,
             )
 
-            # 로그인 처리
-            auth_login(request, user)
+            # 로그인 처리 시 backend 명시
+            auth_login(
+                request, user, backend="django.contrib.auth.backends.ModelBackend"
+            )
             return redirect("index")
 
         except ValueError as e:
@@ -91,7 +98,7 @@ class UserUpdateView(View):
 
             user = UserService.update_user(
                 request.user,
-                username=request.POST.get("username"),
+                nickname=request.POST.get("nickname"),
                 email=request.POST.get("email"),
                 phone=request.POST.get("phone"),
                 user_image=user_image if user_image else request.user.user_image,
@@ -116,7 +123,9 @@ class UserLoginView(View):
         try:
             user = authenticate(request, username=username, password=password)
             if user is not None:
-                auth_login(request, user)
+                auth_login(
+                    request, user, backend="django.contrib.auth.backends.ModelBackend"
+                )
                 # next 파라미터가 있으면 해당 URL로 리다이렉트
                 next_url = request.GET.get("next") or request.POST.get("next")
                 if next_url:
@@ -134,27 +143,6 @@ class UserLogoutView(View):
     def post(self, request):
         logout(request)
         return redirect("index")
-
-
-# class SocialLoginCallbackView(View):
-#     def get(self, request, *args, **kwargs):
-#         if request.user.is_authenticated:
-#             social_account = SocialAccount.objects.filter(user=request.user).first()
-#             if social_account:
-#                 # 소셜 계정 정보 처리
-#                 provider = social_account.provider
-#                 if provider == 'google':
-#                     # 구글 로그인 후처리
-#                     pass
-#                 #elif provider == 'naver':
-#                 #    # 네이버 로그인 후처리
-#                 #    pass
-#                 #elif provider == 'kakao':
-#                 #    # 카카오 로그인 후처리
-#                 #    pass
-
-#             return redirect('posts:post_list')
-#         return redirect('users:user_login')
 
 
 class GoogleLoginView(View):
@@ -216,6 +204,6 @@ class GoogleLoginView(View):
                 username=user_info.get("name", ""),
             )
 
-        # backend 지정하여 로그인
+        # backend 명시적으로 지정
         auth_login(request, user, backend="django.contrib.auth.backends.ModelBackend")
         return redirect("posts:post_list")

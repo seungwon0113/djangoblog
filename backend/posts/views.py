@@ -9,7 +9,7 @@ from django.views import View
 from categories.models import Category
 from comments.services import CommentService
 from posts.models import Post
-from posts.services import create_post, get_post_by_id, get_public_posts
+from posts.services import PostService
 from tags.models import Tag
 
 logger = logging.getLogger(__name__)
@@ -22,27 +22,12 @@ class PostListView(View):
         search_query = request.GET.get("search", "")
         category = request.GET.get("category", "")
 
-        # 로그인한 사용자의 경우 자신의 비공개 게시글도 표시
-        if request.user.is_authenticated:
-            posts = Post.objects.filter(
-                Q(is_public=True) | Q(author=request.user)
-            ).order_by("-created_at")
-        else:
-            # 비로그인 사용자는 공개 게시글만 표시
-            posts = Post.objects.filter(is_public=True).order_by("-created_at")
+        # 검색 서비스 호출
+        posts = PostService.search_posts(search_query, request.user)
 
-        # 카테고리로 필터링
+        # 카테고리 필터링
         if category:
-            posts = posts.filter(category__name__exact=category)
-        # 검색어가 있는 경우 모든 필드에서 검색
-        elif search_query:
-            posts = posts.filter(
-                Q(title__icontains=search_query)  # 제목 검색
-                | Q(content__icontains=search_query)  # 내용 검색
-                | Q(category__name__icontains=search_query)  # 카테고리 검색
-                | Q(tags__name__icontains=search_query)  # 태그 검색
-                | Q(author__username__icontains=search_query)  # 작성자 검색
-            ).distinct()
+            posts = PostService.filter_posts_by_category(posts, category)
 
         context = {
             "posts": posts,
@@ -56,7 +41,7 @@ class PostListView(View):
 # 게시글 상세조회
 class PostDetailView(View):
     def get(self, request, pk):
-        post = get_post_by_id(pk)
+        post = PostService.get_post_by_id(pk)
 
         # 비공개 게시글인 경우 작성자만 접근 가능
         if not post.is_public and (
@@ -112,7 +97,7 @@ class PostCreateView(View):
             is_public = request.POST.get("is_public") == "true"
             logger.info(f"Create - is_public value: {is_public}")
 
-            post = create_post(
+            post = PostService.create_post(
                 title=request.POST["title"],
                 content=request.POST["content"],
                 author=request.user,

@@ -3,7 +3,7 @@ from django.views import View
 
 from comments.models import Comment
 from comments.services import CommentService
-from posts.services import get_post_by_id
+from posts.services import PostService
 
 
 class CommentListView(View):
@@ -30,7 +30,7 @@ class CommentCreateView(View):
             return render(
                 request,
                 "posts/postdetail.html",
-                {"post": get_post_by_id(post_id), "error": str(e)},
+                {"post": PostService.get_post_by_id(post_id), "error": str(e)},
             )
 
 
