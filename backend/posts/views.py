@@ -136,6 +136,10 @@ class PostUpdateView(View):
         post = Post.objects.get(pk=pk)
         categories = Category.objects.all()
         tags = Tag.objects.all()
+        # 사용자 검증
+        if not request.user.is_authenticated or request.user != post.author:
+            return render(request, "posts/postauthor.html", status=403)
+
         return render(
             request,
             "posts/postupdate.html",
@@ -150,7 +154,6 @@ class PostUpdateView(View):
     def post(self, request, pk):
         try:
             logger.info(f"UPDATE - POST Data: {request.POST}")  # 전체 POST 데이터 로깅
-
             post = Post.objects.get(pk=pk)
             post.title = request.POST["title"]
             post.content = request.POST["content"]
@@ -192,7 +195,10 @@ class PostUpdateView(View):
 
 
 class PostDeleteView(View):
+    # 사용자 검증
     def post(self, request, pk):
+        if not request.user.is_authenticated:
+            return redirect("users:user_login")
         post = Post.objects.get(pk=pk)
         post.delete()
         return redirect("posts:post_list")
