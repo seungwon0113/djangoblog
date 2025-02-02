@@ -10,6 +10,7 @@ from django.shortcuts import redirect, render
 from django.views.generic import View
 
 from categories.models import Category
+from config.settings import env
 from posts.services import PostService
 from users.models import User
 from users.services import UserService
@@ -148,17 +149,16 @@ class UserLogoutView(View):
 class GoogleLoginView(View):
     def get(self, request):
         # 인증 코드가 없으면 구글 로그인 페이지로 리다이렉트
+        redirect_uri = env("GOOGLE_REDIRECT_URI")
         if not request.GET.get("code"):
             auth_url = (
                 "https://accounts.google.com/o/oauth2/v2/auth?"
                 "client_id={}&"
                 "response_type=code&"
-                "scope=openid email profile&"  # openid 스코프 추가
-                "access_type=offline&"  # refresh_token을 위해 추가
-                "redirect_uri={}"  # state 파라미터 제거
-            ).format(
-                settings.GOOGLE_CLIENT_ID, request.build_absolute_uri("/users/google/")
-            )
+                "scope=openid email profile&"
+                "access_type=offline&"
+                "redirect_uri={}"
+            ).format(env("GOOGLE_CLIENT_ID"), redirect_uri)
             return redirect(auth_url)
 
         # 인증 코드가 있으면 처리
@@ -168,9 +168,9 @@ class GoogleLoginView(View):
         token_url = "https://oauth2.googleapis.com/token"
         data = {
             "code": code,
-            "client_id": settings.GOOGLE_CLIENT_ID,
-            "client_secret": settings.GOOGLE_SECRET,
-            "redirect_uri": request.build_absolute_uri("/users/google/"),
+            "client_id": env("GOOGLE_CLIENT_ID"),
+            "client_secret": env("GOOGLE_SECRET"),
+            "redirect_uri": redirect_uri,
             "grant_type": "authorization_code",
         }
 
