@@ -15,11 +15,18 @@ class UserService:
         return User.objects.filter(username=username).exists()
 
     @staticmethod
-    def create_user(username, password, email, phone=None, user_image=None):
-        # 소셜로그인 예외 처리
+    def check_nickname_exists(nickname):
+        return User.objects.filter(nickname=nickname).exists()
 
+    @staticmethod
+    def create_user(
+        username, password, email, nickname=None, phone=None, user_image=None
+    ):
+        # 소셜로그인 예외 처리
         if UserService.check_username_exists(username):
             raise ValueError("이미 사용 중인 아이디입니다.")
+        if UserService.check_nickname_exists(nickname):
+            raise ValueError("이미 사용 중인 닉네임입니다.")
         if UserService.check_email_exists(email):
             raise ValueError("이미 사용 중인 이메일입니다.")
 
@@ -27,6 +34,7 @@ class UserService:
             username=username,
             password=password,
             email=email,
+            nickname=nickname or username,  # nickname이 없으면 username 사용
             phone=phone,
             user_image=user_image,
         )
@@ -68,9 +76,9 @@ class UserService:
 
     @staticmethod
     def create_google_user(email, username):
-        """구글 로그인 사용자 생성"""
         user = User.objects.create_user(
             email=email,
             username=username,
+            nickname=username,  # username을 닉네임으로도 사용
         )
         return user
