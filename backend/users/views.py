@@ -1,14 +1,17 @@
+import requests
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import authenticate
 from django.contrib.auth import login as auth_login
 from django.contrib.auth import logout
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.db import IntegrityError
+from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.views.generic import View
 
 from categories.models import Category
 from posts.services import get_category_post_count
+from users.models import User
 from users.services import UserService
 
 
@@ -131,3 +134,88 @@ class UserLogoutView(View):
     def post(self, request):
         logout(request)
         return redirect("index")
+
+
+# class SocialLoginCallbackView(View):
+#     def get(self, request, *args, **kwargs):
+#         if request.user.is_authenticated:
+#             social_account = SocialAccount.objects.filter(user=request.user).first()
+#             if social_account:
+#                 # 소셜 계정 정보 처리
+#                 provider = social_account.provider
+#                 if provider == 'google':
+#                     # 구글 로그인 후처리
+#                     pass
+#                 #elif provider == 'naver':
+#                 #    # 네이버 로그인 후처리
+#                 #    pass
+#                 #elif provider == 'kakao':
+#                 #    # 카카오 로그인 후처리
+#                 #    pass
+
+#             return redirect('posts:post_list')
+#         return redirect('users:user_login')
+
+
+class GoogleLoginView(View):
+    def get(self, request):
+        # 인증 코드가 없으면 구글 로그인 페이지로 리다이렉트
+        if not request.GET.get("code"):
+            auth_url = (
+                "https://accounts.google.com/o/oauth2/v2/auth?"
+                "client_id={}&"
+                "response_type=code&"
+                "scope=openid email profile&"  # openid 스코프 추가
+                "access_type=offline&"  # refresh_token을 위해 추가
+                "redirect_uri={}"  # state 파라미터 제거
+            ).format(
+                settings.GOOGLE_CLIENT_ID, request.build_absolute_uri("/users/google/")
+            )
+            return redirect(auth_url)
+
+        # 인증 코드가 있으면 처리
+        code = request.GET.get("code")
+
+        # 구글 토큰 받기
+        token_url = "https://oauth2.googleapis.com/token"
+        data = {
+            "code": code,
+            "client_id": settings.GOOGLE_CLIENT_ID,
+            "client_secret": settings.GOOGLE_SECRET,
+            "redirect_uri": request.build_absolute_uri("/users/google/"),
+            "grant_type": "authorization_code",
+        }
+
+        response = requests.post(token_url, data=data)
+        if response.status_code != 200:
+            return JsonResponse({"error": "토큰 가져오기 실패"}, status=500)
+
+        # 유저 정보 가져오기
+        access_token = response.json().get("access_token")
+        userinfo_url = "https://www.googleapis.com/oauth2/v3/userinfo"
+        headers = {"Authorization": f"Bearer {access_token}"}
+        userinfo_response = requests.get(userinfo_url, headers=headers)
+
+        if userinfo_response.status_code != 200:
+            return JsonResponse({"error": "유저정보 가져오기 실패"}, status=500)
+
+        user_info = userinfo_response.json()
+        email = user_info.get("email")
+
+        try:
+            user = User.objects.get(email=email)
+            if not user.is_active:
+                user.delete()
+                user = UserService.create_google_user(
+                    email=email,
+                    username=user_info.get("name", ""),
+                )
+        except User.DoesNotExist:
+            user = UserService.create_google_user(
+                email=email,
+                username=user_info.get("name", ""),
+            )
+
+        # backend 지정하여 로그인
+        auth_login(request, user, backend="django.contrib.auth.backends.ModelBackend")
+        return redirect("posts:post_list")

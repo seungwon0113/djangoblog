@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django.contrib.sites",  # sites를 위로 이동
     # apps
     "users",
     "posts",
@@ -60,6 +61,13 @@ INSTALLED_APPS = [
     "likes",
     "tags",
     "corsheaders",
+    # social login
+    "allauth",
+    "allauth.account",
+    "allauth.socialaccount",
+    "allauth.socialaccount.providers.google",
+    "allauth.socialaccount.providers.naver",
+    "allauth.socialaccount.providers.kakao",
 ]
 
 MIDDLEWARE = [
@@ -71,6 +79,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "allauth.account.middleware.AccountMiddleware",
 ]
 
 ROOT_URLCONF = "config.urls"
@@ -126,6 +135,27 @@ AUTH_PASSWORD_VALIDATORS = [
         "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
 ]
+
+# allauth 설정
+AUTHENTICATION_BACKENDS = [
+    # Django 기본 인증
+    "django.contrib.auth.backends.ModelBackend",
+    # allauth 인증
+    "allauth.account.auth_backends.AuthenticationBackend",
+]
+
+GOOGLE_CLIENT_ID = env("GOOGLE_CLIENT_ID")
+GOOGLE_SECRET = env("GOOGLE_SECRET")
+
+
+# 소셜 로그인 관련 추가 설정
+ACCOUNT_AUTHENTICATION_METHOD = "email"  # email로 인증
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_UNIQUE_EMAIL = True
+ACCOUNT_USERNAME_REQUIRED = True
+SOCIALACCOUNT_AUTO_SIGNUP = True  # 자동 회원가입
+LOGIN_REDIRECT_URL = "posts:post_list"
+ACCOUNT_LOGOUT_REDIRECT_URL = "index"
 
 
 # Internationalization

@@ -32,10 +32,11 @@ urlpatterns = (
     [
         path("admin/", admin.site.urls),
         path("", index, name="index"),
-        path("users/", include("users.urls"), name="users"),
+        path("users/", include("users.urls", namespace="users")),
         path("posts/", include("posts.urls", namespace="posts")),
         path("comments/", include("comments.urls", namespace="comments")),
         path("contacts/", include("contacts.urls", namespace="contacts")),
+        path("accounts/", include("allauth.urls")),
     ]
     + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
     + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

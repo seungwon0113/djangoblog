@@ -1,19 +1,15 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block content %}
 <div class="container mt-5">
     <div class="row justify-content-center">
         <div class="col-md-6">
-            <div class="card shadow-sm">
-                <div class="card-header bg-transparent py-3">
-                    <h4 class="mb-0">로그인</h4>
-                </div>
+            <div class="card">
                 <div class="card-body">
-                    {% if error %}
-                    <div class="alert alert-danger" role="alert">
-                        {{ error }}
-                    </div>
-                    {% endif %}
+                    <h2 class="card-title text-center mb-4">로그인</h2>
+                    
+                    <!-- 일반 로그인 폼 -->
                     <form method="post" action="{% url 'users:user_login' %}">
                         {% csrf_token %}
                         {% if request.GET.next %}
@@ -27,15 +23,45 @@
                             <label for="password" class="form-label">비밀번호</label>
                             <input type="password" class="form-control" id="password" name="password" required>
                         </div>
-                        <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="bi bi-box-arrow-in-right"></i> 로그인
-                            </button>
-                            <a href="{% url 'users:user_signup' %}" class="btn btn-outline-secondary">
-                                <i class="bi bi-person-plus"></i> 회원가입
-                            </a>
-                        </div>
+                        <button type="submit" class="btn btn-primary w-100 mb-3">로그인</button>
                     </form>
+
+                    <!-- 소셜 로그인 구분선 -->
+                    <div class="position-relative my-4">
+                        <hr>
+                        <p class="text-center position-absolute top-50 start-50 translate-middle bg-white px-3">
+                            소셜 계정으로 로그인
+                        </p>
+                    </div>
+
+                    <!-- 소셜 로그인 버튼 -->
+                    <div class="social-login">
+                        <!-- 구글 로그인 -->
+                        <a href="{% url 'users:google' %}" 
+                           class="btn btn-outline-danger w-100 mb-2">
+                            <i class="bi bi-google me-2"></i>구글로 로그인
+                        </a>
+
+                        <!-- 네이버 로그인 -->
+                        <a href="#" class="btn btn-outline-success w-100 mb-2 disabled">
+                            <i class="bi bi-n-circle me-2"></i>네이버로 로그인 (준비중)
+                        </a>
+
+                        <!-- 카카오 로그인 -->
+                        <a href="#" class="btn btn-outline-warning w-100 disabled">
+                            <i class="bi bi-chat-fill me-2"></i>카카오로 로그인 (준비중)
+                        </a>
+                    </div>
+
+                    <div class="text-center mt-3">
+                        <p>계정이 없으신가요? <a href="{% url 'users:user_signup' %}">회원가입</a></p>
+                    </div>
+
+                    {% if error %}
+                    <div class="alert alert-danger mt-3" role="alert">
+                        {{ error }}
+                    </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
