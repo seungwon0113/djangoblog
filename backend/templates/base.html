@@ -22,6 +22,152 @@
             securityLevel: 'loose'
         });
     </script>
+    <style>
+    .wrapper {
+        display: flex;
+        position: relative;
+        min-height: calc(100vh - 200px);
+    }
+
+    .sidebar-container {
+        position: relative;
+        width: 200px;
+    }
+
+    .sidebar {
+        position: sticky;
+        top: 20px;
+        width: 200px;
+        background-color: #fff;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        margin: 20px 10px;
+        padding: 15px 0;
+    }
+
+    .sidebar-header {
+        padding: 0 20px 10px 20px;
+        border-bottom: 1px solid #eee;
+    }
+
+    .sidebar-header h5 {
+        margin: 0;
+        color: #333;
+        font-size: 1rem;
+    }
+
+    .sidebar-menu {
+        list-style: none;
+        padding: 10px 0;
+        margin: 0;
+    }
+
+    .sidebar-menu li a {
+        display: flex;
+        align-items: center;
+        padding: 8px 20px;
+        color: #666;
+        text-decoration: none;
+        transition: all 0.2s;
+        font-size: 0.9rem;
+    }
+
+    .sidebar-menu li a:hover {
+        background-color: #f8f9fa;
+        color: #000;
+    }
+
+    .sidebar-menu li a.active {
+        background-color: #e9ecef;
+        color: #000;
+        font-weight: 500;
+    }
+
+    .sidebar-menu li a i {
+        margin-right: 8px;
+        font-size: 0.9rem;
+    }
+
+    .main-content {
+        flex: 1;
+        padding: 20px;
+    }
+
+    .posts-container {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+    @media (max-width: 768px) {
+        .sidebar-container {
+            display: none;
+        }
+    }
+
+    .sidebar-dropdown > a {
+        justify-content: space-between;
+    }
+
+    .sidebar-submenu {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: none;
+        background-color: #f8f9fa;
+    }
+
+    .sidebar-submenu.show {
+        display: block;
+    }
+
+    .sidebar-search .input-group {
+        background-color: #fff;
+        border-radius: 4px;
+        overflow: hidden;
+    }
+
+    .sidebar-search .form-control {
+        border: 1px solid #dee2e6;
+        border-right: none;
+        font-size: 0.9rem;
+    }
+
+    .sidebar-search .btn {
+        border: 1px solid #dee2e6;
+        border-left: none;
+    }
+
+    /* 드롭다운 애니메이션 */
+    .bi-chevron-down {
+        transition: transform 0.3s;
+    }
+
+    .sidebar-dropdown.active .bi-chevron-down {
+        transform: rotate(180deg);
+    }
+
+    /* 드롭다운 토글 화살표 제거 */
+    .dropdown-toggle::after {
+        display: none !important;
+    }
+
+    .sidebar-submenu a {
+        padding: 8px 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        text-decoration: none;
+        color: #666;
+    }
+
+    .badge {
+        font-size: 0.75rem;
+        font-weight: normal;
+        background-color: #0f0f0f !important;
+        color: #fff !important;
+        margin-left: 8px;
+    }
+    </style>
 </head>
 <body>
     <nav class="navbar navbar-expand-lg bg-body-tertiary">
@@ -33,25 +179,7 @@
             <div class="collapse navbar-collapse" id="navbarSupportedContent">
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                     <li class="nav-item">
-                        <a class="nav-link active" href="{% url 'index' %}">Home</a>
-                    </li>
-                    <li class="nav-item">
                         <a class="nav-link" href="{% url 'posts:post_list' %}">Posts</a>
-                    </li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                            Categories
-                        </a>
-                        <ul class="dropdown-menu">
-                            {% for category in categories %}
-                                <li><a class="dropdown-item" href="{% url 'posts:post_list' %}?category={{ category.name }}">{{ category.name }}</a></li>
-                            {% endfor %}
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="{% url 'posts:post_list' %}">All Categories</a></li>
-                        </ul>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'contacts:contact_inquiry' %}">Contact</a>
                     </li>
                 </ul>
 
@@ -70,6 +198,11 @@
                     {% if user.is_authenticated %}
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                {% if user.profile_image %}
+                                    <img src="{{ user.profile_image.url }}" alt="Profile Image" class="rounded-circle" style="width: 20px; height: 20px;">
+                                {% else %}
+                                    <i class="bi bi-person-circle"></i>
+                                {% endif %}
                                 {{ user.nickname }}
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end">
@@ -109,8 +242,73 @@
     </div>
     {% endif %}
 
-    {% block content %}
-    {% endblock %}
+    <!-- 메인 레이아웃 -->
+    <div class="wrapper">
+        <!-- 사이드바 -->
+        <div class="sidebar-container">
+            <div class="sidebar">
+                <div class="sidebar-header">
+                    <h5>메뉴</h5>
+                </div>
+                <ul class="sidebar-menu">
+                    <!-- 게시글 드롭다운 -->
+                    <li class="sidebar-dropdown">
+                        <a href="#" class="dropdown-toggle" style="text-decoration: none;">
+                            <i class="bi bi-file-text"></i> 게시글
+                            <i class="bi bi-chevron-down ms-auto"></i>
+                        </a>
+                        <ul class="sidebar-submenu">
+                            <li>
+                                <a href="{% url 'posts:post_list' %}" class="{% if not current_category %}active{% endif %}">
+                                    <span><i class="bi bi-collection"></i> 전체보기</span>
+                                    <span class="badge bg-secondary">{{ total_posts }}</span>
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider my-2"></li>
+                            {% for cat in categories %}
+                            <li>
+                                <a href="{% url 'posts:post_list' %}?category={{ cat.name }}" 
+                                   class="{% if current_category.id == cat.id %}active{% endif %}">
+                                    <span><i class="bi bi-folder"></i> {{ cat.name }}</span>
+                                    <span class="badge bg-secondary">{{ cat.post_count }}</span>
+                                </a>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </li>
+
+                    <!-- 문의하기 -->
+                    <li>
+                        <a href="{% url 'contacts:contact_inquiry' %}">
+                            <i class="bi bi-envelope"></i> 문의하기
+                        </a>
+                    </li>
+
+                    <!-- 검색 -->
+                    <li>
+                        <div class="sidebar-search px-3 mt-3">
+                            <form action="{% url 'posts:post_list' %}" method="get">
+                                <div class="input-group">
+                                    <input type="search" class="form-control form-control-sm" 
+                                           name="search" placeholder="검색어 입력..."
+                                           value="{{ search_query }}">
+                                    <button class="btn btn-sm btn-outline-secondary" type="submit">
+                                        <i class="bi bi-search"></i>
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- 메인 콘텐츠 -->
+        <div class="main-content">
+            {% block content %}
+            {% endblock %}
+        </div>
+    </div>
 
     <footer class="container mt-5">
         <hr>
@@ -135,5 +333,41 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     
     {% block scripts %}{% endblock %}
+
+    <!-- 드롭다운 동작을 위한 스크립트 수정 -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const dropdowns = document.querySelectorAll('.sidebar-dropdown > a');
+        
+        // 저장된 토글 상태 복원
+        const savedState = localStorage.getItem('sidebarDropdownState');
+        if (savedState === 'open') {
+            const dropdown = document.querySelector('.sidebar-dropdown');
+            const submenu = dropdown.querySelector('.sidebar-submenu');
+            dropdown.classList.add('active');
+            submenu.classList.add('show');
+        }
+        
+        dropdowns.forEach(dropdown => {
+            dropdown.addEventListener('click', function(e) {
+                e.preventDefault();
+                const parent = this.parentElement;
+                const submenu = this.nextElementSibling;
+                
+                // 토글 active 클래스
+                parent.classList.toggle('active');
+                
+                // 서브메뉴 표시/숨김
+                if (submenu.classList.contains('show')) {
+                    submenu.classList.remove('show');
+                    localStorage.setItem('sidebarDropdownState', 'closed');
+                } else {
+                    submenu.classList.add('show');
+                    localStorage.setItem('sidebarDropdownState', 'open');
+                }
+            });
+        });
+    });
+    </script>
 </body>
 </html>

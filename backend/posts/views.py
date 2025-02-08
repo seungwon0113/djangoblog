@@ -18,20 +18,18 @@ logger = logging.getLogger(__name__)
 # 게시글 전체조회
 class PostListView(View):
     def get(self, request):
-        categories = Category.objects.all()
         search_query = request.GET.get("search", "")
-        category = request.GET.get("category", "")
+        category_name = request.GET.get("category", "")
 
         # 검색 서비스 호출
         posts = PostService.search_posts(search_query, request.user)
 
         # 카테고리 필터링
-        if category:
-            posts = PostService.filter_posts_by_category(posts, category)
+        if category_name:
+            posts = PostService.filter_posts_by_category(posts, category_name)
 
         context = {
             "posts": posts,
-            "categories": categories,
             "search_query": search_query,
         }
 
@@ -49,12 +47,15 @@ class PostDetailView(View):
         ):
             return render(request, "posts/post_forbidden.html", status=403)
 
-        categories = Category.objects.all()
         comments = CommentService.get_comments_by_post_id(pk)
+        context = {
+            "post": post,
+            "comments": comments,
+        }
         return render(
             request,
             "posts/postdetail.html",
-            {"post": post, "categories": categories, "comments": comments},
+            context,
         )
 
 
@@ -65,7 +66,6 @@ class PostCreateView(View):
         if not request.user.is_authenticated:
             return redirect("users:user_login")
 
-        categories = Category.objects.all()
         tags = Tag.objects.all()
         # image 파일 업로드 경로 설정
         image_upload_path = os.path.join(settings.MEDIA_ROOT, "images")
@@ -77,7 +77,6 @@ class PostCreateView(View):
             request,
             "posts/postcreate.html",
             {
-                "categories": categories,
                 "tags": tags,
                 "image_upload_path": image_upload_path,
             },
@@ -108,32 +107,32 @@ class PostCreateView(View):
             )
             return redirect("posts:post_detail", pk=post.pk)
         except Exception as e:
-            categories = Category.objects.all()
+            context = {
+                "error": str(e),
+            }
             return render(
                 request,
                 "posts/postcreate.html",
-                {"categories": categories, "error": str(e)},
+                context,
             )
 
 
 class PostUpdateView(View):
     def get(self, request, pk):
         post = Post.objects.get(pk=pk)
-        categories = Category.objects.all()
         tags = Tag.objects.all()
         # 사용자 검증
         if not request.user.is_authenticated or request.user != post.author:
             return render(request, "posts/postauthor.html", status=403)
 
+        context = {
+            "post": post,
+            "tags": tags,
+        }
         return render(
             request,
             "posts/postupdate.html",
-            {
-                "post": post,
-                "categories": categories,
-                "tags": tags,
-                "categories": categories,
-            },
+            context,
         )
 
     def post(self, request, pk):
@@ -167,15 +166,14 @@ class PostUpdateView(View):
             return redirect("posts:post_detail", pk=post.pk)
 
         except Exception as e:
-            categories = Category.objects.all()
+            context = {
+                "post": post,
+                "error": str(e),
+            }
             return render(
                 request,
                 "posts/postupdate.html",
-                {
-                    "post": post,
-                    "categories": categories,
-                    "error": str(e),
-                },
+                context,
             )
 
 
