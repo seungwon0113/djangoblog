@@ -34,7 +34,6 @@ class UserProfileView(LoginRequiredMixin, View):
                 )
 
             user = UserService.get_user_by_username(request.user.username)
-            categories = Category.objects.all()
             # 카테고리별 게시글 수 계산
             category_post_count = PostService.get_category_post_count(user)
             return render(
@@ -43,7 +42,6 @@ class UserProfileView(LoginRequiredMixin, View):
                 {
                     "user": user,
                     "user_image": user.user_image,
-                    "categories": categories,
                     "category_post_count": category_post_count,
                 },
             )
