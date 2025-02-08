@@ -83,3 +83,23 @@ class PostService:
         if category_name:
             return posts.filter(category__name__exact=category_name)
         return posts
+
+    @staticmethod
+    def get_top_posts(limit=10):
+        return Post.objects.filter(is_public=True).order_by("-view_count")[:limit]
+
+    @staticmethod
+    def get_posts_by_category(category, limit=5):
+        return Post.objects.filter(category=category, is_public=True).order_by(
+            "-created_at"
+        )[:limit]
+
+    @staticmethod
+    def get_total_posts():
+        # 공개된 전체 게시글 수
+        return Post.objects.filter(is_public=True).count()
+
+    @staticmethod
+    def get_total_posts_by_category(category):
+        # 공개된 게시글만 카운트
+        return Post.objects.filter(category=category, is_public=True).count()
