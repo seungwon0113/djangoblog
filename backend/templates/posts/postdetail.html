@@ -80,7 +80,7 @@
         <div class="col-lg-8">
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="{% url 'posts:post_list' %}" class="text-decoration-none">Posts</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'posts:post_list' %}?category={{ post.category.name }}" class="text-decoration-none">{{ post.category.name }}</a></li>
                     <li class="breadcrumb-item active" aria-current="page">{{ post.title }}</li>
                 </ol>
             </nav>
