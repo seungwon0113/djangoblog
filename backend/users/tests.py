@@ -12,7 +12,6 @@ class UserTestCase(TestCase):
             is_staff=True,
             is_superuser=True,
         )
-    
 
         self.assertEqual(user.username, "testuser")
         self.assertEqual(user.email, "testuser@example.com")
