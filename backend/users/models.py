@@ -17,6 +17,10 @@ class UserManager(BaseUserManager):
         if not email:
             raise ValueError("이메일은 필수 입력 항목입니다.")
 
+        # nickname이 없으면 username을 사용
+        if "nickname" not in extra_fields:
+            extra_fields["nickname"] = username
+
         user = self.model(
             username=username, email=self.normalize_email(email), **extra_fields
         )
@@ -46,6 +50,7 @@ class User(BaseModel, AbstractUser, PermissionsMixin):
 
     # 기존 필드들
     username = models.CharField(max_length=255, unique=True)
+    nickname = models.CharField(max_length=30, unique=True)
     email = models.EmailField(unique=True)
     password = models.CharField(max_length=255)
     phone = models.CharField(max_length=255, null=True, blank=True)

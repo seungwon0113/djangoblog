@@ -95,6 +95,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "core.context_processors.categories",
             ],
         },
     },
@@ -143,10 +144,6 @@ AUTHENTICATION_BACKENDS = [
     # allauth 인증
     "allauth.account.auth_backends.AuthenticationBackend",
 ]
-
-GOOGLE_CLIENT_ID = env("GOOGLE_CLIENT_ID")
-GOOGLE_SECRET = env("GOOGLE_SECRET")
-
 
 # 소셜 로그인 관련 추가 설정
 ACCOUNT_AUTHENTICATION_METHOD = "email"  # email로 인증
