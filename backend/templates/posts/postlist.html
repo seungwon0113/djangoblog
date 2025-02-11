@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load custom_filters %}
 
 {% block content %}
 <div class="container mt-4">
@@ -13,18 +14,24 @@
         <div class="col">
             <a href="{% url 'posts:post_detail' post.id %}" class="text-decoration-none">
                 <div class="card h-100 shadow-sm hover-card">
-                    {% if post.image %}
-                    <div class="card-img-wrapper">
-                        <img src="{{ post.image.url }}" class="card-img-top" alt="{{ post.title }}">
-                    </div>
-                    {% else %}
                     <div class="card-img-wrapper bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
-                        <i class="bi bi-image text-secondary" style="font-size: 2rem;"></i>
+                        {% if post.image %}
+                            <img src="{{ post.image.url }}" class="card-img-top" alt="{{ post.title }}" style="object-fit: contain; max-height: 100%;">
+                        {% else %}
+                            {% with post.content|get_first_image as first_image %}
+                                {% if first_image %}
+                                    <img src="{{ first_image }}" class="card-img-top" alt="{{ post.title }}" style="object-fit: contain; max-height: 100%;">
+                                {% else %}
+                                    <i class="bi bi-image text-secondary" style="font-size: 3rem;"></i>
+                                {% endif %}
+                            {% endwith %}
+                        {% endif %}
                     </div>
-                    {% endif %}
                     <div class="card-body">
-                        <h5 class="card-title text-dark">{{ post.title }}</h5>
-                        <p class="card-text text-secondary">{{ post.content|truncatewords:30 }}</p>
+                        <h5 class="card-title text-truncate text-dark">{{ post.title }}</h5>
+                        <p class="card-text text-muted small">
+                            {{ post.content|striptags|truncatechars:100 }}
+                        </p>
                         <div class="d-flex gap-2 mb-2">
                             {% if post.category %}
                             <span class="badge bg-primary">{{ post.category.name }}</span>
@@ -71,12 +78,11 @@
 
 <style>
     .hover-card {
-        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        transition: transform 0.2s;
     }
     
     .hover-card:hover {
         transform: translateY(-5px);
-        box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
     }
     
     .card-img-wrapper {
