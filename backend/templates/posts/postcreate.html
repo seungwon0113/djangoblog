@@ -1,6 +1,14 @@
 {% extends "base.html" %}
 
 {% block content %}
+<!-- SimpleMDE -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/simplemde/latest/simplemde.min.css">
+<script src="https://cdn.jsdelivr.net/simplemde/latest/simplemde.min.js"></script>
+
+<!-- highlight.js -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/vs2015.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+
 <div class="container mt-4">
     <div class="row justify-content-center">
         <div class="col-md-8">
@@ -15,23 +23,18 @@
                     </div>
                 </div>
                 <div class="card-body">
-                    <form method="post" enctype="multipart/form-data">
+                    <form method="post" enctype="multipart/form-data" id="postForm">
                         {% csrf_token %}
                         <input type="hidden" name="is_public" id="isPublicHidden" value="true">
+                        <input type="hidden" name="content" id="hiddenContent">
+                        
                         <div class="mb-3">
                             <label for="title" class="form-label">제목</label>
                             <input type="text" class="form-control" id="title" name="title" required>
                         </div>
                         <div class="mb-3">
                             <label for="content" class="form-label">내용</label>
-                            <div class="d-flex gap-2 mb-2">
-                                <button type="button" class="btn btn-sm btn-outline-secondary" id="editButton">편집</button>
-                                <button type="button" class="btn btn-sm btn-outline-secondary" id="previewButton">미리보기</button>
-                            </div>
-                            <div class="markdown-editor">
-                                <textarea class="form-control" id="content" name="content" rows="10" required></textarea>
-                                <div id="preview" class="form-control d-none p-3" style="min-height: 250px; overflow-y: auto;"></div>
-                            </div>
+                            <textarea class="form-control" id="content" rows="10"></textarea>
                             <div class="form-text">
                                 마크다운 문법을 지원합니다. 코드 블록은 다음과 같이 작성하세요:<br>
                                 <code>```python</code><br>
@@ -78,47 +81,70 @@
 
 <style>
 /* 코드 블록 스타일 */
-.markdown-editor pre {
-    background-color: #1e1e1e !important;  /* VS Code 스타일의 어두운 배경 */
-    border-radius: 6px;
-    padding: 16px;
-    margin: 1em 0;
-    overflow: auto;
+.CodeMirror {
+    font-family: 'Consolas', 'Monaco', monospace !important;
 }
 
-.markdown-editor pre code {
-    color: #d4d4d4 !important;  /* 밝은 색상의 텍스트 */
-    background: none !important;
-    border: none;
-    padding: 0 !important;
-    font-family: 'Consolas', 'Monaco', monospace;
-    font-size: 14px;
-    line-height: 1.5;
-    white-space: pre;
+/* 코드 블록 내 텍스트 색상 */
+.CodeMirror .cm-keyword { color: #0000FF !important; }    /* def, return 등 키워드 */
+.CodeMirror .cm-def { color: #267F99 !important; }        /* 함수명 */
+.CodeMirror .cm-variable { color: #001080 !important; }   /* 변수명 */
+.CodeMirror .cm-string { color: #A31515 !important; }     /* 문자열 */
+.CodeMirror .cm-number { color: #098658 !important; }     /* 숫자 */
+.CodeMirror .cm-comment { color: #008000 !important; }    /* 주석 */
+.CodeMirror .cm-operator { color: #000000 !important; }   /* 연산자 */
+
+/* 코드 블록 라인 번호 */
+.CodeMirror-gutters {
+    border-right: 1px solid #ddd !important;
 }
 
-/* 인라인 코드 스타일 */
-.markdown-editor code:not(pre code) {
-    background-color: #2d2d2d;
-    color: #d4d4d4;
-    padding: 0.2em 0.4em;
-    border-radius: 4px;
-    font-family: 'Consolas', 'Monaco', monospace;
-    font-size: 90%;
+.CodeMirror-linenumber {
+    color: #999 !important;
 }
 
-/* 미리보기 영역 스타일 */
-#preview {
-    background-color: white;
-    padding: 20px !important;
+/* 코드 블록 선택 영역 */
+.CodeMirror-selected {
+    background: #add6ff !important;
 }
 
+/* 코드 블록 커서 */
+.CodeMirror-cursor {
+    border-left: 2px solid #000000 !important;
+}
+
+/* 미리보기 영역의 코드 블록 */
+.editor-preview pre,
+.editor-preview-side pre {
+    background-color: #1e1e1e !important;
+    color: #d4d4d4 !important;
+    padding: 1em !important;
+    border-radius: 4px !important;
+    border: 1px solid #404040 !important;
+}
+
+/* 미리보기 영역의 코드 하이라이팅 */
+.editor-preview-side .hljs-keyword,
+.editor-preview .hljs-keyword { color: #569CD6 !important; }
+.editor-preview-side .hljs-def,
+.editor-preview .hljs-def { color: #DCDCAA !important; }
+.editor-preview-side .hljs-variable,
+.editor-preview .hljs-variable { color: #9CDCFE !important; }
+.editor-preview-side .hljs-string,
+.editor-preview .hljs-string { color: #CE9178 !important; }
+.editor-preview-side .hljs-number,
+.editor-preview .hljs-number { color: #B5CEA8 !important; }
+.editor-preview-side .hljs-comment,
+.editor-preview .hljs-comment { color: #6A9955 !important; }
+
+/* 기존 태그 관련 스타일은 유지 */
 .tag-list {
     display: flex;
     flex-wrap: wrap;
     gap: 0.5rem;
     margin-top: 0.5rem;
 }
+
 .tag-item {
     background-color: #e9ecef;
     border-radius: 15px;
@@ -128,148 +154,265 @@
     align-items: center;
     gap: 0.3rem;
 }
+
 .tag-remove {
     cursor: pointer;
     color: #666;
 }
+
 .tag-remove:hover {
     color: #dc3545;
 }
 </style>
 
-<!-- marked.js 추가 -->
-<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script>
-const contentTextarea = document.getElementById('content');
-const preview = document.getElementById('preview');
-const editButton = document.getElementById('editButton');
-const previewButton = document.getElementById('previewButton');
-
-// marked.js 설정
-marked.setOptions({
-    highlight: function(code, lang) {
-        if (lang && hljs.getLanguage(lang)) {
-            return hljs.highlight(code, { language: lang }).value;
-        }
-        return hljs.highlightAuto(code).value;
+// SimpleMDE 초기화
+var simplemde = new SimpleMDE({ 
+    element: document.getElementById("content"),
+    spellChecker: false,
+    status: false,
+    toolbar: ["bold", "italic", "heading", "|", 
+             "quote", "unordered-list", "ordered-list", "|",
+             "code", "table", "|",
+             "link", {
+                 name: "image",
+                 action: function customFunction(editor){
+                     const input = document.createElement('input');
+                     input.type = 'file';
+                     input.accept = 'image/*';
+                     
+                     input.onchange = async function() {
+                         const file = this.files[0];
+                         if (file) {
+                             const formData = new FormData();
+                             formData.append('image', file);
+                             
+                             try {
+                                 const response = await fetch('/posts/upload_image/', {
+                                     method: 'POST',
+                                     body: formData,
+                                     headers: {
+                                         'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                                     },
+                                     credentials: 'same-origin'
+                                 });
+                                 
+                                 if (response.ok) {
+                                     const data = await response.json();
+                                     const imageUrl = data.url;
+                                     const cm = editor.codemirror;
+                                     const output = `![이미지](${imageUrl})`;
+                                     cm.replaceSelection(output);
+                                 } else {
+                                     alert('이미지 업로드에 실패했습니다.');
+                                 }
+                             } catch (error) {
+                                 console.error('Error:', error);
+                                 alert('이미지 업로드 중 오류가 발생했습니다.');
+                             }
+                         }
+                     };
+                     input.click();
+                 },
+                 className: "fa fa-picture-o",
+                 title: "이미지 업로드",
+             }, "|", 
+             "preview", "side-by-side", "fullscreen"],
+    renderingConfig: {
+        codeSyntaxHighlighting: true,
+        singleLineBreaks: false,
+        breaks: true
     },
-    breaks: true,
-    gfm: true,
-    langPrefix: 'hljs language-'
-});
+    indentWithTabs: false,  // 탭 대신 스페이스 사용
+    tabSize: 4,
+    previewRender: function(plainText) {
+        // 코드 블록 처리
+        const processedText = plainText.replace(/```(\w+)?\n([\s\S]*?)```/g, function(match, lang, code) {
+            if (lang && hljs.getLanguage(lang)) {
+                try {
+                    return '<pre><code class="hljs language-' + lang + '">' + 
+                           hljs.highlight(code, { language: lang }).value + 
+                           '</code></pre>';
+                } catch (e) {}
+            }
+            return '<pre><code class="hljs">' + hljs.highlightAuto(code).value + '</code></pre>';
+        });
 
-// 코드 블록 자동 완성
-contentTextarea.addEventListener('input', (e) => {
-    const pos = e.target.selectionStart;
-    const content = e.target.value;
-    
-    // 백틱 3개를 입력했을 때
-    // 처음에만 코드 블록 추가 하도록 수정
-    if (content.slice(pos-3, pos) === '```') {
-        // 이전 줄이 비어있거나 문서의 시작인 경우
-        const afterText = content.slice(pos);
-        if (!afterText || afterText.endsWith('\n')) {
-            // 단순히 줄바꿈만 추가
-            e.target.value = content + '\n\n```';
-            // 커서를 중간으로 이동
-            e.target.selectionStart = pos + 1;
-            e.target.selectionEnd = pos + 1;
-            e.preventDefault();
-        }
-
+        return marked.parse(processedText);
     }
 });
 
-// 편집 모드
-editButton.addEventListener('click', () => {
-    preview.classList.add('d-none');
-    contentTextarea.classList.remove('d-none');
-    editButton.classList.add('active');
-    previewButton.classList.remove('active');
+// CodeMirror 설정 직접 수정
+simplemde.codemirror.setOption("extraKeys", {
+    Tab: function(cm) {
+        var spaces = Array(cm.getOption("tabSize") + 1).join(" ");
+        cm.replaceSelection(spaces);
+    }
 });
 
-// 미리보기 모드
-previewButton.addEventListener('click', () => {
-    preview.classList.remove('d-none');
-    contentTextarea.classList.add('d-none');
-    previewButton.classList.add('active');
-    editButton.classList.remove('active');
-    updatePreview();
+// CodeMirror 인덴트 단위 설정
+simplemde.codemirror.setOption("indentUnit", 4);
+
+// 코드 블록 자동 완성
+simplemde.codemirror.on("inputRead", function(cm, change) {
+    if (change.text[0] === "`" && change.text.length === 1) {
+        const cursor = cm.getCursor();
+        const line = cm.getLine(cursor.line);
+        if (line.slice(cursor.ch - 3, cursor.ch) === "```") {
+            const prevLine = cursor.line > 0 ? cm.getLine(cursor.line - 1) : "";
+            if (!prevLine || prevLine.trim() === "") {
+                cm.replaceRange("python\n\n```", 
+                    {line: cursor.line, ch: cursor.ch},
+                    {line: cursor.line, ch: cursor.ch}
+                );
+                cm.setCursor({line: cursor.line + 1, ch: 0});
+            }
+        }
+    }
 });
 
-// 미리보기 업데이트
-function updatePreview() {
-    const markdown = contentTextarea.value;
-    preview.innerHTML = marked.parse(markdown);
-    // 코드 하이라이트 적용
-    preview.querySelectorAll('pre code').forEach((block) => {
-        hljs.highlightElement(block);
+// 드래그 앤 드롭 이벤트 처리
+simplemde.codemirror.on('drop', async function(cm, event) {
+    event.preventDefault();
+    
+    const file = event.dataTransfer.files[0];
+    if (file && file.type.startsWith('image/')) {
+        const formData = new FormData();
+        formData.append('image', file);
+        
+        try {
+            const response = await fetch('/posts/upload_image/', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                },
+                credentials: 'same-origin'
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                const imageUrl = data.url;
+                const pos = cm.coordsChar({left: event.x, top: event.y});
+                cm.replaceRange(`![이미지](${imageUrl})`, pos);
+            } else {
+                alert('이미지 업로드에 실패했습니다.');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('이미지 업로드 중 오류가 발생했습니다.');
+        }
+    }
+});
+
+// 폼 제출 처리
+document.querySelector('#postForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    // SimpleMDE 내용을 hidden input에 복사
+    const content = simplemde.value();
+    
+    // FormData 객체 생성
+    const formData = new FormData(this);
+    formData.set('content', content);  // content 값 설정
+    
+    // 필수 입력값 검사
+    if (!content.trim()) {
+        alert('내용을 입력해주세요.');
+        return;
+    }
+    
+    // 카테고리 검사
+    const category = document.getElementById('category').value;
+    if (!category) {
+        alert('카테고리를 선택하세요.');
+        return;
+    }
+    
+    // 제목 검사
+    const title = document.getElementById('title').value;
+    if (!title.trim()) {
+        alert('제목을 입력해주세요.');
+        return;
+    }
+    
+    try {
+        const response = await fetch(this.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            credentials: 'same-origin'
+        });
+        
+        if (response.ok) {
+            // 성공 시 리다이렉트 (response.url 사용)
+            window.location.href = response.url || '/posts/';
+        } else {
+            const errorData = await response.text();
+            console.error('Server Error:', errorData);
+            alert('게시글 작성에 실패했습니다.');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('오류가 발생했습니다.');
+    }
+});
+
+// 태그 관련 코드
+let tags = [];
+
+function updateTags() {
+    const tagContainer = document.getElementById('tagContainer');
+    const tagsHidden = document.getElementById('tagsHidden');
+    
+    tagContainer.innerHTML = `
+        <div class="tag-list">
+            ${tags.map(tag => `
+                <span class="tag-item">
+                    ${tag}
+                    <i class="bi bi-x tag-remove" data-tag="${tag}"></i>
+                </span>
+            `).join('')}
+        </div>
+    `;
+    
+    // hidden input 업데이트
+    tagsHidden.value = tags.join(',');
+
+    // 삭제 버튼에 이벤트 리스너 추가
+    document.querySelectorAll('.tag-remove').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const tagToRemove = this.dataset.tag;
+            tags = tags.filter(tag => tag !== tagToRemove);
+            updateTags();
+        });
     });
 }
 
-// 초기 상태 설정
-editButton.classList.add('active');
-
-document.addEventListener('DOMContentLoaded', function() {
-    const tagInput = document.getElementById('tagInput');
-    const tagContainer = document.getElementById('tagContainer');
-    const tagsHidden = document.getElementById('tagsHidden');
-    let tags = [];
-
-    function updateTags() {
-        // 태그 컨테이너 업데이트
-        tagContainer.innerHTML = `
-            <div class="tag-list">
-                ${tags.map(tag => `
-                    <span class="tag-item">
-                        ${tag}
-                        <i class="bi bi-x tag-remove" data-tag="${tag}"></i>
-                    </span>
-                `).join('')}
-            </div>
-        `;
+// 태그 입력 처리
+const tagInput = document.getElementById('tagInput');
+tagInput.addEventListener('keyup', function(e) {
+    if (e.key === ' ' || e.key === 'Enter') {
+        e.preventDefault();
+        let tagText = this.value.trim();
         
-        // hidden input 업데이트
-        tagsHidden.value = tags.join(',');
-
-        // 삭제 버튼에 이벤트 리스너 추가
-        document.querySelectorAll('.tag-remove').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const tagToRemove = this.dataset.tag;
-                tags = tags.filter(tag => tag !== tagToRemove);
-                updateTags();
-            });
-        });
-    }
-
-    tagInput.addEventListener('keyup', function(e) {
-        if (e.key === ' ' || e.key === 'Enter') {
-            e.preventDefault();
-            let tagText = this.value.trim();
-            
-            // # 없으면 추가
-            if (!tagText.startsWith('#')) {
-                tagText = '#' + tagText;
-            }
-            
-            // 중복 체크 및 빈 태그 체크
-            if (tagText !== '#' && !tags.includes(tagText)) {
-                tags.push(tagText);
-                updateTags();
-                this.value = '';
-            }
+        if (!tagText.startsWith('#')) {
+            tagText = '#' + tagText;
         }
-    });
-
-    // 폼 제출 전 태그 정리
-    document.querySelector('form').addEventListener('submit', function(e) {
-        // # 제거하고 저장 (모든 #을 제거한 후 저장)
-        tagsHidden.value = tags.map(tag => tag.replace(/^#+/, '')).join(',');
-    });
+        
+        if (tagText !== '#' && !tags.includes(tagText)) {
+            tags.push(tagText);
+            updateTags();
+            this.value = '';
+        }
+    }
 });
 
-// 토글 변경 시 hidden input 값 업데이트
-document.getElementById('isPublic').addEventListener('change', function() {
+// 토글 처리
+const isPublicCheckbox = document.getElementById('isPublic');
+isPublicCheckbox.addEventListener('change', function() {
     const lockIcon = document.getElementById('lockIcon');
     const hiddenInput = document.getElementById('isPublicHidden');
     

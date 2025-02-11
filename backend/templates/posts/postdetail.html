@@ -1,61 +1,80 @@
 {% extends "base.html" %}
 {% load custom_filters %}  <!-- 커스텀 필터 로드 -->
 
-<!-- 기존 head 태그 안에 추가 -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+<!-- SimpleMDE -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/simplemde/latest/simplemde.min.css">
+<script src="https://cdn.jsdelivr.net/simplemde/latest/simplemde.min.js"></script>
+
+<!-- highlight.js -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/vs2015.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 
 <style>
-/* 코드 블록 스타일 */
-.content pre {
-    background-color: #1e1e1e !important;
-    border-radius: 6px;
-    padding: 16px;
-    margin: 1em 0;
-    overflow: auto;
-}
-
-.content pre code {
-    color: #d4d4d4 !important;
-    background: none !important;
-    border: none;
-    padding: 0 !important;
-    font-family: 'Consolas', 'Monaco', monospace;
-    font-size: 14px;
-    line-height: 1.5;
-    white-space: pre;
-}
-
-/* 인라인 코드 스타일 */
-.content code:not(pre code) {
-    background-color: #2d2d2d;
-    color: #d4d4d4;
-    padding: 0.2em 0.4em;
-    border-radius: 4px;
-    font-family: 'Consolas', 'Monaco', monospace;
-    font-size: 90%;
-}
-
-.content {
+/* 마크다운 컨텐츠 스타일 */
+.markdown-content {
+    background-color: white;
+    padding: 20px;
+    border: 1px solid #dee2e6;
+    border-radius: 0.375rem;
+    margin-bottom: 1rem;
     line-height: 1.6;
     font-size: 16px;
 }
 
-.content p {
+/* 코드 블록 스타일 */
+.markdown-content pre {
+    background-color: #1e1e1e;
+    border-radius: 4px !important;
+    padding: 16px;
+    margin: 1em 0;
+    overflow-x: auto;
+}
+
+.markdown-content pre code {
+    color: #d4d4d4;
+    background: none;
+    padding: 0;
+    font-family: Consolas, Monaco, monospace;
+    font-size: 14px;
+    line-height: 1.5;
+    white-space: pre;
+    tab-size: 4;
+}
+
+/* 인라인 코드 스타일 */
+.markdown-content :not(pre) > code {
+    background-color: #2d2d2d;
+    color: #d4d4d4;
+    padding: 0.2em 0.4em;
+    border-radius: 3px;
+    font-family: Consolas, Monaco, monospace;
+    font-size: 90%;
+}
+
+/* 기본 텍스트 스타일 */
+.markdown-content p {
     margin-bottom: 16px;
     white-space: pre-wrap;
 }
 
-.content ul, .content ol {
+.markdown-content ul, 
+.markdown-content ol {
     padding-left: 2em;
     margin-bottom: 16px;
 }
 
+/* 체크박스 스타일 */
+.markdown-content input[type="checkbox"] {
+    margin-right: 0.5em;
+}
+
+/* 태그 스타일 */
 .tags {
     display: flex;
     flex-wrap: wrap;
     gap: 0.5rem;
 }
+
 .tag-item {
     background-color: #e9ecef;
     border-radius: 15px;
@@ -64,11 +83,13 @@
     color: #495057;
     white-space: nowrap;
 }
+
 .tag-item:hover {
     background-color: #dee2e6;
     color: #212529;
     text-decoration: none;
 }
+
 .more-tags {
     cursor: pointer;
 }
@@ -80,7 +101,7 @@
         <div class="col-lg-8">
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="{% url 'posts:post_list' %}" class="text-decoration-none">Posts</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'posts:post_list' %}?category={{ post.category.name }}" class="text-decoration-none">{{ post.category.name }}</a></li>
                     <li class="breadcrumb-item active" aria-current="page">{{ post.title }}</li>
                 </ol>
             </nav>
@@ -130,7 +151,7 @@
                             <img src="{{ post.image.url }}" class="img-fluid rounded" alt="{{ post.title }}">
                         </div>
                         {% endif %}
-                        <div class="content">
+                        <div class="markdown-content">
                             {{ post.content|pybo_filter }}
                         </div>
                     </div>
