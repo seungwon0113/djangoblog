@@ -1,9 +1,91 @@
 {% extends "base.html" %}
+{% load custom_filters %}
 
 {% block content %}
-<div class="posts-container">
-    <h4 class="mb-4">Hello World</h4>
-    <!-- 여기에 게시글 목록이 들어갈 예정 -->
-    <p>This is a main page.</p>
+<div class="container mt-4">
+    <!-- 캐러셀 섹션 -->
+    <div id="mainCarousel" class="carousel slide mb-4">
+        <div class="carousel-inner">
+            {% for image in carousel_images %}
+                <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                    <div style="height: 400px; background-color: #f8f9fa; position: relative;">
+                        <img src="{{ image.image.url }}" 
+                             class="d-block w-100 h-100" 
+                             alt="{{ image.title }}"
+                             style="object-fit: cover; position: absolute; top: 0; left: 0;"
+                             onerror="this.onerror=null; this.src='{{ MEDIA_URL }}{{ image.image.name }}'; console.log('Trying alternate URL 1');"
+                             onload="console.log('Image loaded successfully: ' + this.src);">
+                        <div class="carousel-caption" style="z-index: 2;">
+                            <h5>{{ image.title }}</h5>
+                            {% if image.link %}
+                                <a href="{{ image.link }}" class="btn btn-light btn-sm" target="_blank">자세히 보기</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="carousel-item active">
+                    <div class="d-flex align-items-center justify-content-center" 
+                         style="height: 400px; background-color: #f8f9fa;">
+                        <h3 class="text-muted">등록된 이미지가 없습니다</h3>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        {% if carousel_images.count > 1 %}
+            <button class="carousel-control-prev" type="button" data-bs-target="#mainCarousel" data-bs-slide="prev">
+                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">이전</span>
+            </button>
+            <button class="carousel-control-next" type="button" data-bs-target="#mainCarousel" data-bs-slide="next">
+                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">다음</span>
+            </button>
+        {% endif %}
+    </div>
+
+    <!-- 카테고리별 최신글 섹션은 그대로 유지 -->
 </div>
+{% endblock %}
+
+<style>
+.carousel {
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.carousel-caption {
+    background: rgba(0, 0, 0, 0.7);
+    border-radius: 10px;
+    padding: 20px;
+}
+</style>
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const carousel = new bootstrap.Carousel(document.getElementById('mainCarousel'), {
+        interval: 5000
+    });
+    
+    // 디버깅을 위한 로그
+    console.log('Carousel initialized');
+    const items = document.querySelectorAll('.carousel-item');
+    console.log('Number of carousel items:', items.length);
+    items.forEach((item, index) => {
+        const img = item.querySelector('img');
+        if (img) {
+            console.log(`Item ${index} image src:`, img.src);
+        }
+    });
+
+    // 이미지 로딩 상태 확인
+    document.querySelectorAll('.carousel-item img').forEach((img, index) => {
+        console.log(`Image ${index} src:`, img.src);
+        console.log(`Image ${index} complete:`, img.complete);
+        console.log(`Image ${index} naturalWidth:`, img.naturalWidth);
+    });
+});
+</script>
 {% endblock %}

@@ -2,69 +2,96 @@
 
 {% block content %}
 <div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>카테고리 관리</h2>
-        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createCategoryModal">
-            <i class="bi bi-plus-lg"></i> 새 카테고리
-        </button>
+    <!-- 캐러셀 이미지 관리 섹션 -->
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">캐러셀 이미지 관리</h5>
+            <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#createCarouselModal">
+                <i class="bi bi-plus-lg"></i> 새 이미지
+            </button>
+        </div>
+        <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>이미지</th>
+                            <th>제목</th>
+                            <th>링크</th>
+                            <th>상태</th>
+                            <th>작업</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for carousel in carousels %}
+                        <tr>
+                            <td>
+                                <img src="{{ carousel.image.url }}" alt="{{ carousel.title }}" 
+                                     style="height: 50px; width: 100px; object-fit: cover;">
+                            </td>
+                            <td>{{ carousel.title }}</td>
+                            <td>
+                                {% if carousel.link %}
+                                <a href="{{ carousel.link }}" target="_blank">링크</a>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" 
+                                           {% if carousel.is_active %}checked{% endif %}
+                                           onchange="toggleCarouselStatus({{ carousel.id }})">
+                                </div>
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-danger" 
+                                        onclick="deleteCarousel({{ carousel.id }})">삭제</button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
 
-    <div class="table-responsive">
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>이름</th>
-                    <th>작업</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for category in categories %}
-                <tr>
-                    <td>{{ category.name }}</td>
-                    <td>
-                        <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" 
-                                data-bs-target="#updateCategoryModal{{ category.id }}">
-                            수정
-                        </button>
-                        <form action="{% url 'category:category' %}" method="post" class="d-inline">
-                            {% csrf_token %}
-                            <input type="hidden" name="action" value="delete">
-                            <input type="hidden" name="category_id" value="{{ category.id }}">
-                            <button type="submit" class="btn btn-sm btn-outline-danger" 
-                                    onclick="return confirm('정말 삭제하시겠습니까?')">삭제</button>
-                        </form>
-                    </td>
-                </tr>
-
-                <!-- 수정 모달 -->
-                <div class="modal fade" id="updateCategoryModal{{ category.id }}" tabindex="-1">
-                    <div class="modal-dialog">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title">카테고리 수정</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                            </div>
-                            <form action="{% url 'category:category' %}" method="post">
-                                {% csrf_token %}
-                                <input type="hidden" name="action" value="update">
-                                <input type="hidden" name="category_id" value="{{ category.id }}">
-                                <div class="modal-body">
-                                    <div class="mb-3">
-                                        <label class="form-label">카테고리 이름</label>
-                                        <input type="text" class="form-control" name="name" value="{{ category.name }}" required>
-                                    </div>
-                                </div>
-                                <div class="modal-footer">
-                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">취소</button>
-                                    <button type="submit" class="btn btn-primary">저장</button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-                {% endfor %}
-            </tbody>
-        </table>
+    <!-- 카테고리 관리 섹션 -->
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">카테고리 관리</h5>
+            <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#createCategoryModal">
+                <i class="bi bi-plus-lg"></i> 새 카테고리
+            </button>
+        </div>
+        <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>이름</th>
+                            <th>작업</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for category in categories %}
+                        <tr>
+                            <td>{{ category.name }}</td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" 
+                                        data-bs-target="#updateCategoryModal{{ category.id }}">수정</button>
+                                <form action="{% url 'category:category' %}" method="post" class="d-inline">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="delete">
+                                    <input type="hidden" name="category_id" value="{{ category.id }}">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" 
+                                            onclick="return confirm('정말 삭제하시겠습니까?')">삭제</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -93,4 +120,145 @@
         </div>
     </div>
 </div>
+
+<!-- 캐러셀 이미지 추가 모달 -->
+<div class="modal fade" id="createCarouselModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">새 캐러셀 이미지</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{% url 'carousel:create' %}" method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">제목</label>
+                        <input type="text" class="form-control" name="title" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">이미지</label>
+                        <input type="file" class="form-control" name="image" accept="image/*" required>
+                        <small class="text-muted">권장 크기: 1200x400 픽셀</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">링크 (선택사항)</label>
+                        <input type="url" class="form-control" name="link">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">취소</button>
+                    <button type="submit" class="btn btn-primary">추가</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+/* 스크롤바 스타일링 */
+.card-body::-webkit-scrollbar {
+    width: 8px;
+}
+
+.card-body::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.card-body::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+}
+
+.card-body::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* 테이블 헤더 고정 */
+.table-responsive {
+    position: relative;
+}
+
+.table thead th {
+    position: sticky;
+    top: 0;
+    background-color: white;
+    z-index: 1;
+    border-top: none;
+}
+
+/* 테이블 호버 효과 */
+.table-hover tbody tr:hover {
+    background-color: rgba(0,0,0,.075);
+}
+</style>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+function updateCarouselOrder(id, order) {
+    fetch('/carousel/update_order/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: JSON.stringify({ id, order })
+    }).then(response => {
+        if (response.ok) {
+            location.reload();
+        }
+    });
+}
+
+function toggleCarouselStatus(id) {
+    fetch('/carousel/update_status/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: JSON.stringify({ id: id })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status !== 'success') {
+            alert('상태 변경 중 오류가 발생했습니다.');
+            location.reload();
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('상태 변경 중 오류가 발생했습니다.');
+        location.reload();
+    });
+}
+
+function deleteCarousel(id) {
+    if (confirm('정말 삭제하시겠습니까?')) {
+        fetch('/carousel/delete/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({ id: id })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                location.reload();
+            } else {
+                alert('삭제 중 오류가 발생했습니다: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('삭제 중 오류가 발생했습니다.');
+        });
+    }
+}
+</script>
 {% endblock %}
