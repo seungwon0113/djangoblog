@@ -129,7 +129,7 @@ class UserLoginView(View):
                 next_url = request.GET.get("next") or request.POST.get("next")
                 if next_url:
                     return redirect(next_url)
-                return redirect("posts:post_list")
+                return redirect("index")
             else:
                 messages.error(request, "아이디 또는 비밀번호가 올바르지 않습니다.")
         except Exception as e:
@@ -204,4 +204,4 @@ class GoogleLoginView(View):
 
         # backend 명시적으로 지정
         auth_login(request, user, backend="django.contrib.auth.backends.ModelBackend")
-        return redirect("posts:post_list")
+        return redirect("index")

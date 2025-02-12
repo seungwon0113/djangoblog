@@ -1,8 +1,9 @@
 import logging
 import os
+from uuid import uuid4
 
 from django.conf import settings
-from django.db.models import Q
+from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.views import View
 
@@ -185,3 +186,26 @@ class PostDeleteView(View):
         post = Post.objects.get(pk=pk)
         post.delete()
         return redirect("posts:post_list")
+
+
+class ImageUploadView(View):
+    def post(self, request):
+        if "image" in request.FILES:
+            image = request.FILES["image"]
+            # 파일명 중복 방지를 위한 UUID 생성
+            ext = os.path.splitext(image.name)[1]
+            filename = f"{uuid4().hex}{ext}"
+
+            # 이미지 저장
+            image_path = os.path.join(settings.MEDIA_ROOT, "uploads", filename)
+            os.makedirs(os.path.dirname(image_path), exist_ok=True)
+
+            with open(image_path, "wb+") as destination:
+                for chunk in image.chunks():
+                    destination.write(chunk)
+
+            # 이미지 URL 반환
+            image_url = f"/media/uploads/{filename}"
+            return JsonResponse({"url": image_url})
+
+        return JsonResponse({"error": "이미지를 찾을 수 없습니다."}, status=400)
