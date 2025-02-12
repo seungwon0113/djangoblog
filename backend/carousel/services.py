@@ -16,10 +16,7 @@ class CarouselService:
     def create_carousel_image(title, image, link=None, is_active=True):
         # 새로운 캐러셀 이미지 생성
         return Carousel.objects.create(
-            title=title, 
-            image=image, 
-            link=link, 
-            is_active=is_active
+            title=title, image=image, link=link, is_active=is_active
         )
 
     @staticmethod

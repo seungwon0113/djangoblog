@@ -30,7 +30,7 @@ class CarouselView(View):
             if request.path in ["/carousel/delete/", "/carousel/update_status/"]:
                 return self.handle_json_response(False, str(e), 400)
             messages.error(request, f"오류가 발생했습니다: {str(e)}")
-        
+
         return redirect("category:category")
 
     def handle_create(self, request):
