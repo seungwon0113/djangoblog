@@ -3,6 +3,7 @@ from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.views import View
 
+from carousel.models import Carousel
 from categories.models import Category
 from categories.services import CategoryService
 
@@ -13,7 +14,10 @@ class CategoryView(View):
         if not CategoryService.is_staff_superuser(request.user):
             messages.error(request, "접근 권한이 없습니다.")
             return redirect("index")
-        return render(request, "category/category.html")
+        categories = CategoryService.get_all_categories()
+        carousels = Carousel.objects.all()
+        context = {"categories": categories, "carousels": carousels}
+        return render(request, "category/category.html", context)
 
     def post(self, request):
         # staff나 superuser가 아니면 메인으로 리다이렉트
