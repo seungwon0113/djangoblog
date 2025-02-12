@@ -4,17 +4,26 @@
 {% block content %}
 <div class="container mt-4">
     <!-- 캐러셀 섹션 -->
-    <div id="mainCarousel" class="carousel slide mb-4">
+    <div id="mainCarousel" class="carousel slide" data-bs-ride="carousel">
+        <!-- 인디케이터 추가 -->
+        <div class="carousel-indicators">
+            {% for image in carousel_images %}
+                <button type="button" data-bs-target="#mainCarousel" 
+                        data-bs-slide-to="{{ forloop.counter0 }}" 
+                        {% if forloop.first %}class="active" aria-current="true"{% endif %}
+                        aria-label="Slide {{ forloop.counter }}">
+                </button>
+            {% endfor %}
+        </div>
+
         <div class="carousel-inner">
             {% for image in carousel_images %}
-                <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                <div class="carousel-item {% if forloop.first %}active{% endif %}" data-bs-interval="4000">
                     <div style="height: 400px; background-color: #f8f9fa; position: relative;">
                         <img src="{{ image.image.url }}" 
                              class="d-block w-100 h-100" 
                              alt="{{ image.title }}"
-                             style="object-fit: cover; position: absolute; top: 0; left: 0;"
-                             onerror="this.onerror=null; this.src='{{ MEDIA_URL }}{{ image.image.name }}'; console.log('Trying alternate URL 1');"
-                             onload="console.log('Image loaded successfully: ' + this.src);">
+                             style="object-fit: cover; position: absolute; top: 0; left: 0;">
                         <div class="carousel-caption" style="z-index: 2;">
                             <h5>{{ image.title }}</h5>
                             {% if image.link %}
@@ -32,6 +41,7 @@
                 </div>
             {% endfor %}
         </div>
+
         {% if carousel_images.count > 1 %}
             <button class="carousel-control-prev" type="button" data-bs-target="#mainCarousel" data-bs-slide="prev">
                 <span class="carousel-control-prev-icon" aria-hidden="true"></span>
@@ -65,26 +75,17 @@
 {% block scripts %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const carousel = new bootstrap.Carousel(document.getElementById('mainCarousel'), {
-        interval: 5000
-    });
-    
-    // 디버깅을 위한 로그
-    console.log('Carousel initialized');
-    const items = document.querySelectorAll('.carousel-item');
-    console.log('Number of carousel items:', items.length);
-    items.forEach((item, index) => {
-        const img = item.querySelector('img');
-        if (img) {
-            console.log(`Item ${index} image src:`, img.src);
-        }
+    // 캐러셀 초기화
+    const myCarousel = document.getElementById('mainCarousel');
+    const carousel = new bootstrap.Carousel(myCarousel, {
+        interval: 3000,
+        ride: 'carousel',
+        wrap: true
     });
 
-    // 이미지 로딩 상태 확인
-    document.querySelectorAll('.carousel-item img').forEach((img, index) => {
-        console.log(`Image ${index} src:`, img.src);
-        console.log(`Image ${index} complete:`, img.complete);
-        console.log(`Image ${index} naturalWidth:`, img.naturalWidth);
+    // 캐러셀 이벤트 리스너 추가
+    myCarousel.addEventListener('slide.bs.carousel', function () {
+        console.log('Sliding to next item');
     });
 });
 </script>
