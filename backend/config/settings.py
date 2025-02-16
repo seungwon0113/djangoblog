@@ -21,6 +21,7 @@ TEMPLATES_DIR = BASE_DIR / "templates"
 # 환경 변수 설정
 env = environ.Env()
 environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
+SECRET_KEY = env("DJANGO_SECRET_KEY")
 
 # DEBUG 설정
 DEBUG = env("DEBUG")
