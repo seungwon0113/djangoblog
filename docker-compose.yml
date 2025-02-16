@@ -17,6 +17,7 @@ services:
     env_file:
       - .env
     environment:
+      - DEBUG=${DEBUG}
       - DB_HOST=${DB_HOST}
       - DB_PORT=${DB_PORT}
       - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
