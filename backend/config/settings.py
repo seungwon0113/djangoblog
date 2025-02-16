@@ -19,18 +19,14 @@ import environ
 BASE_DIR = Path(__file__).resolve().parent.parent
 TEMPLATES_DIR = BASE_DIR / "templates"
 # 환경 변수 설정
-env = environ.Env()
+env = environ.Env(
+    DEBUG=(bool, False)  # 기본값을 False로 설정
+)
 environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
 
-
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
-
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = env("DJANGO_SECRET_KEY")
-
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = env("DEBUG")
+# DEBUG 설정
+DEBUG = env.bool("DEBUG", default=False)  # bool 타입으로 명시적 변환
+print(f"Current DEBUG setting: {DEBUG}")
 
 ALLOWED_HOSTS = [
     "slog.my",
