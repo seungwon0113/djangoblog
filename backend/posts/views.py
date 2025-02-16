@@ -3,11 +3,9 @@ import os
 from uuid import uuid4
 
 from django.conf import settings
-from django.db.models import Q
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.views import View
-from django.views.decorators.csrf import csrf_exempt
 
 from categories.models import Category
 from comments.services import CommentService

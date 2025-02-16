@@ -10,7 +10,13 @@ class PostService:
 
     @staticmethod
     def create_post(
-        title, content, author, category, image=None, tags=None, is_public=True
+        title,
+        content,
+        author,
+        category,
+        image=None,
+        tags=None,
+        is_public=True,
     ):
         # 마크다운을 그대로 저장 (HTML 변환하지 않음)
         post = Post.objects.create(
