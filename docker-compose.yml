@@ -17,10 +17,7 @@ services:
     env_file:
       - .env
     environment:
-<<<<<<< HEAD
-=======
       - DEBUG=False
->>>>>>> e260cd3f5b68d456ae9d74a974c5afbfea0a25ba
       - DB_HOST=${DB_HOST}
       - DB_PORT=${DB_PORT}
       - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
