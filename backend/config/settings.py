@@ -19,13 +19,11 @@ import environ
 BASE_DIR = Path(__file__).resolve().parent.parent
 TEMPLATES_DIR = BASE_DIR / "templates"
 # 환경 변수 설정
-env = environ.Env(
-    DEBUG=(bool, False)  # 기본값을 False로 설정
-)
+env = environ.Env()
 environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
 
 # DEBUG 설정
-DEBUG = env.bool("DEBUG", default=False)  # bool 타입으로 명시적 변환
+DEBUG = env("DEBUG")
 print(f"Current DEBUG setting: {DEBUG}")
 
 ALLOWED_HOSTS = [
