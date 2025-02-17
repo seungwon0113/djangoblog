@@ -171,6 +171,12 @@ USE_TZ = True
 STATIC_URL = "/static/"
 STATIC_ROOT = os.path.join(BASE_DIR, "static")
 
+# 정적 파일 처리 설정
+STATICFILES_FINDERS = [
+    "django.contrib.staticfiles.finders.FileSystemFinder",
+    "django.contrib.staticfiles.finders.AppDirectoriesFinder",
+]
+
 # Media files
 MEDIA_URL = "/media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
@@ -255,3 +261,19 @@ CORS_ALLOW_HEADERS = [
     "x-csrftoken",
     "x-requested-with",
 ]
+
+# 마크다운 설정
+MARKDOWN_EXTENSIONS = [
+    "markdown.extensions.fenced_code",
+    "markdown.extensions.codehilite",
+    "markdown.extensions.tables",
+    "markdown.extensions.toc",
+]
+
+MARKDOWN_EXTENSION_CONFIGS = {
+    "markdown.extensions.codehilite": {
+        "css_class": "highlight",
+        "use_pygments": False,
+        "noclasses": True,
+    }
+}
