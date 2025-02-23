@@ -2,6 +2,9 @@ from django.urls import path
 
 from .views import (
     ImageUploadView,
+    PaymentFailView,
+    PaymentSuccessView,
+    PaymentView,
     PostCreateView,
     PostDeleteView,
     PostDetailView,
@@ -18,4 +21,7 @@ urlpatterns = [
     path("<int:pk>/update/", PostUpdateView.as_view(), name="post_update"),
     path("<int:pk>/delete/", PostDeleteView.as_view(), name="post_delete"),
     path("upload_image/", ImageUploadView.as_view(), name="upload_image"),
+    path("payment/", PaymentView.as_view(), name="payment"),
+    path("payment/success/", PaymentSuccessView.as_view(), name="payment_success"),
+    path("payment/fail/", PaymentFailView.as_view(), name="payment_fail"),
 ]

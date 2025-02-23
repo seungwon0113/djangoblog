@@ -1,5 +1,8 @@
+import base64
+
 from django.db.models import Q
 
+from config.settings import env
 from posts.models import Category, Post, Tag
 
 
@@ -109,3 +112,18 @@ class PostService:
     def get_total_posts_by_category(category):
         # 공개된 게시글만 카운트
         return Post.objects.filter(category=category, is_public=True).count()
+
+    @staticmethod
+    def get_toss_base64_secret():
+        # 토스 시크릿 키 Base64 인코딩
+        secret_key = env("TOSS_SECRET") + ":"
+        secret_key_bytes = secret_key.encode("utf-8")
+        return base64.b64encode(secret_key_bytes).decode("utf-8")
+
+    @staticmethod
+    def get_toss_headers():
+        # 토스 API 요청용 헤더
+        return {
+            "Authorization": f"Basic {PostService.get_toss_base64_secret()}",
+            "Content-Type": "application/json",
+        }

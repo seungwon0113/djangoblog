@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+    <h2>결제 성공</h2>
+    <div class="alert alert-success">
+        <p>주문번호: {{ payment_data.orderId }}</p>
+        <p>결제금액: {{ payment_data.totalAmount }}원</p>
+        <p>결제방법: {{ payment_data.method }}</p>
+    </div>
+    <a href="{% url 'posts:post_list' %}" class="btn btn-primary">홈으로</a>
+</div>
+{% endblock %} 

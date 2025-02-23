@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+    <h2>결제 실패</h2>
+    <div class="alert alert-danger">
+        {% if error_message %}
+            <p>{{ error_message }}</p>
+        {% endif %}
+        {% if error_code %}
+            <p>에러 코드: {{ error_code }}</p>
+        {% endif %}
+    </div>
+    <a href="{% url 'posts:payment' %}" class="btn btn-primary">다시 시도</a>
+</div>
+{% endblock %} 

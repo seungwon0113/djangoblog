@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+    <h2>결제 테스트</h2>
+    <button id="payButton" class="btn btn-primary">결제하기</button>
+</div>
+
+<script src="https://js.tosspayments.com/v1/payment"></script>
+<script>
+    var clientKey = "{{ TOSS_CLIENT_ID }}";
+    var tossPayments = TossPayments(clientKey);
+
+    document.getElementById("payButton").addEventListener("click", function() {
+        var orderId = 'order_' + new Date().getTime();
+        tossPayments.requestPayment('카드', {
+            amount: 10000,
+            orderId: orderId,
+            orderName: '테스트 상품',
+            customerName: '테스트 고객',
+            successUrl: window.location.origin + '/posts/payment/success',
+            failUrl: window.location.origin + '/posts/payment/fail',
+            validHours: 24,
+            cashReceipt: {
+                type: '소득공제'
+            }
+        }).catch(function (error) {
+            if (error.code === 'USER_CANCEL') {
+                alert('결제가 취소되었습니다.');
+            } else {
+                alert('결제 중 오류가 발생했습니다: ' + error.message);
+            }
+            console.error(error);
+        });
+    });
+</script>
+{% endblock %}
