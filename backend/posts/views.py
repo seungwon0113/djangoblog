@@ -1,7 +1,10 @@
+import base64
+import json
 import logging
 import os
 from uuid import uuid4
 
+import requests
 from django.conf import settings
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
@@ -9,6 +12,7 @@ from django.views import View
 
 from categories.models import Category
 from comments.services import CommentService
+from config.settings import env
 from posts.models import Post
 from posts.services import PostService
 from tags.models import Tag
@@ -209,3 +213,65 @@ class ImageUploadView(View):
             return JsonResponse({"url": image_url})
 
         return JsonResponse({"error": "이미지를 찾을 수 없습니다."}, status=400)
+
+
+# 결제 테스트
+class PaymentView(View):
+    def get(self, request):
+        context = {"TOSS_CLIENT_ID": env("TOSS_CLIENT_ID")}
+        return render(request, "posts/payment.html", context)
+
+
+# 결제 성공 처리
+class PaymentSuccessView(View):
+    def get(self, request):
+        try:
+            payment_key = request.GET.get("paymentKey")
+            order_id = request.GET.get("orderId")
+            amount = request.GET.get("amount")
+
+            if not all([payment_key, order_id, amount]):
+                return JsonResponse(
+                    {"status": "fail", "message": "필수 파라미터가 누락되었습니다."},
+                    status=400,
+                )
+
+            url = "https://api.tosspayments.com/v1/payments/confirm"
+            data = {"paymentKey": payment_key, "orderId": order_id, "amount": amount}
+
+            response = requests.post(
+                url, headers=PostService.get_toss_headers(), json=data
+            )
+            response_data = response.json()
+
+            if response.status_code == 200:
+                # 여기에 결제 성공 시 DB 처리 로직 추가 가능
+                return render(
+                    request,
+                    "posts/payment_success.html",
+                    {"payment_data": response_data},
+                )
+            return render(
+                request,
+                "posts/payment_fail.html",
+                {
+                    "error_message": response_data.get(
+                        "message", "결제 처리 중 오류가 발생했습니다."
+                    ),
+                    "error_code": response_data.get("code"),
+                },
+            )
+
+        except Exception as e:
+            logger.error(f"Payment error: {str(e)}")
+            return render(
+                request,
+                "posts/payment_fail.html",
+                {"error_message": "결제 처리 중 오류가 발생했습니다."},
+            )
+
+
+# 결제 실패 처리
+class PaymentFailView(View):
+    def get(self, request):
+        return render(request, "posts/payment_fail.html")

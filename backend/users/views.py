@@ -9,7 +9,6 @@ from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.views.generic import View
 
-from categories.models import Category
 from config.settings import env
 from posts.services import PostService
 from users.models import User
