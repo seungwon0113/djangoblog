@@ -10,7 +10,7 @@ class Like(BaseModel):
     post = models.ForeignKey(Post, on_delete=models.CASCADE)
 
     def __str__(self):
-        return f"{self.user.username}님이 {self.post.title}을(를) 좋아합니다."
+        return f"{self.user.username}님이 {self.post.title}게시글에 좋아요를 눌렀습니다."
 
     class Meta:
         db_table = "likes"
